@@ -22,10 +22,13 @@ php-shell:
 	$(DOCKER_PHP_FPM) sh
 
 db-shell:
-	$(DOCKER_DB) psql -U app -d app
+	$(DOCKER_DB) psql -U user -d characters
 
 create-migration:
 	$(DOCKER_PHP_FPM) $(PHP) bin/console make:migration
 
 load-fixtures:
 	$(DOCKER_PHP_FPM) $(PHP) bin/console doctrine:fixtures:load
+
+sql:
+	$(DOCKER_PHP_FPM) $(PHP) dbal:run-sql

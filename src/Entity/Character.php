@@ -39,6 +39,9 @@ class Character
     #[ORM\Column(length: 255)]
     private ?string $image = null;
 
+    #[ORM\ManyToMany(targetEntity: Episode::class, inversedBy: "characters")]
+    private ArrayCollection $episodes;
+
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $created = null;
 
@@ -149,5 +152,15 @@ class Character
         $this->created = $created;
 
         return $this;
+    }
+
+    public function getEpisodes(): ArrayCollection
+    {
+        return $this->episodes;
+    }
+
+    public function setEpisodes(ArrayCollection $episodes): void
+    {
+        $this->episodes = $episodes;
     }
 }

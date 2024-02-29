@@ -27,11 +27,13 @@ class Episode
     #[ORM\Column(nullable: false)]
     private ?int $views = null;
 
-    #[ORM\ManyToMany(targetEntity: Character::class)]
-    #[ORM\JoinTable(name: 'episode_character')]
-    #[ORM\JoinColumn(name: 'episode_id', referencedColumnName: 'id')]
-    #[ORM\InverseJoinColumn(name: 'character_id', referencedColumnName: 'id')]
+    #[ORM\ManyToMany(targetEntity: Character::class, mappedBy: "episodes")]
     private ArrayCollection $characters;
+
+//    #[ORM\ManyToMany(targetEntity: Character::class)]
+//    #[ORM\JoinTable(name: 'episode_character')]
+//    #[ORM\JoinColumn(name: 'episode_id', referencedColumnName: 'id')]
+//    #[ORM\InverseJoinColumn(name: 'character_id', referencedColumnName: 'id')]
 
     public function getCharacters(): ArrayCollection
     {

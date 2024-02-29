@@ -32,3 +32,4 @@ load-fixtures:
 
 sql:
 	$(DOCKER_PHP_FPM) $(PHP) dbal:run-sql
+

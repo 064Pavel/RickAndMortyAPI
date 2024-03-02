@@ -33,3 +33,5 @@ load-fixtures:
 sql:
 	$(DOCKER_PHP_FPM) $(PHP) dbal:run-sql
 
+dump:
+	$(DOCKER_DB) psql -U user characters -f /docker-entrypoint-initdb.d/dump.sql

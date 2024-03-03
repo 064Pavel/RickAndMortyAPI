@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Location;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,13 +17,27 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class LocationRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $entityManager;
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
+        $this->entityManager = $entityManager;
         parent::__construct($registry, Location::class);
     }
 
+    public function save(Location $location): void
+    {
+        $this->entityManager->persist($location);
+        $this->entityManager->flush();
+    }
+
+    public function remove(Location $location): void
+    {
+        $this->entityManager->remove($location);
+        $this->entityManager->flush();
+    }
+
     //    /**
-    //     * @return Location[] Returns an array of Location objects
+    //     * @return LocationDto[] Returns an array of LocationDto objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -36,7 +51,7 @@ class LocationRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Location
+    //    public function findOneBySomeField($value): ?LocationDto
     //    {
     //        return $this->createQueryBuilder('l')
     //            ->andWhere('l.exampleField = :val')

@@ -24,33 +24,41 @@ create table episode
 );
 create table character
 (
-    id          serial
-        primary key,
-    name        text      not null,
-    status      text      not null,
-    species     text      not null,
-    type        text      not null,
-    gender      text      not null,
-    origin_id   integer
-        constraint fk_character_origin_id
-            references location,
-    location_id integer
-        constraint fk_character_location_id
-            references location,
-    image       text      not null,
-    created     timestamp not null
+    id          serial primary key,
+    name        text not null,
+    status      text not null,
+    species     text not null,
+    type        text not null,
+    gender      text not null,
+    origin_id   integer,
+    location_id integer,
+    image       text not null,
+    created     timestamp not null,
+    constraint fk_character_origin_id
+        foreign key (origin_id)
+            references location (id)
+            on delete cascade,
+    constraint fk_character_location_id
+        foreign key (location_id)
+            references location (id)
+            on delete cascade
 );
+
 create table episode_character
 (
-    id           serial
-        primary key,
-    episode_id   integer not null
-        constraint fk_character_episode_episode_id
-            references episode,
-    character_id integer not null
-        constraint fk_character_episode_character_id
-            references character
+    id           serial primary key,
+    episode_id   integer not null,
+    character_id integer not null,
+    constraint fk_character_episode_episode_id
+        foreign key (episode_id)
+            references episode (id)
+            on delete cascade,
+    constraint fk_character_episode_character_id
+        foreign key (character_id)
+            references character (id)
+            on delete cascade
 );
+
 create unique index character_episode_episode_id_character_id
     on episode_character (episode_id, character_id);
 

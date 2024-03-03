@@ -2,7 +2,6 @@
 
 namespace App\DTO;
 
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Constraints as Assert;
 class LocationDto
 {
@@ -11,8 +10,8 @@ class LocationDto
     #[Assert\Length(
         min: 2,
         max: 50,
-        minMessage: 'Your first name must be at least {{ limit }} characters long',
-        maxMessage: 'Your first name cannot be longer than {{ limit }} characters',
+        minMessage: 'Your name must be at least {{ limit }} characters long',
+        maxMessage: 'Your name cannot be longer than {{ limit }} characters',
     )]
     private ?string $name;
     #[Assert\NotBlank]
@@ -20,8 +19,8 @@ class LocationDto
     #[Assert\Length(
         min: 2,
         max: 200,
-        minMessage: 'Your first name must be at least {{ limit }} characters long',
-        maxMessage: 'Your first name cannot be longer than {{ limit }} characters',
+        minMessage: 'Your type must be at least {{ limit }} characters long',
+        maxMessage: 'Your type cannot be longer than {{ limit }} characters',
     )]
     private ?string $type;
     #[Assert\NotBlank]
@@ -29,8 +28,8 @@ class LocationDto
     #[Assert\Length(
         min: 2,
         max: 200,
-        minMessage: 'Your first name must be at least {{ limit }} characters long',
-        maxMessage: 'Your first name cannot be longer than {{ limit }} characters',
+        minMessage: 'Your dimension must be at least {{ limit }} characters long',
+        maxMessage: 'Your dimension cannot be longer than {{ limit }} characters',
     )]
     private ?string $dimension;
     public function __construct(?string $name, ?string $type, ?string $dimension)
@@ -39,11 +38,6 @@ class LocationDto
         $this->type = $type;
         $this->dimension = $dimension;
     }
-
-//    public function deserializeRequest(Request $request): LocationDto
-//    {
-//
-//    }
 
     public function getName(): ?string
     {

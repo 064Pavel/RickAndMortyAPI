@@ -24,6 +24,28 @@ class LocationRepository extends ServiceEntityRepository
         parent::__construct($registry, Location::class);
     }
 
+    public function findPaginated(int $page, int $perPage, string $sort, array $ids): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->setMaxResults($perPage)
+            ->setFirstResult(($page - 1) * $perPage)
+            ->orderBy('p.' . substr($sort, 1), ('-' === $sort[0]) ? 'ASC' : 'DESC');
+
+        if (!empty($ids)) {
+            $qb->andWhere('p.id IN (:ids)')
+                ->setParameter('ids', $ids);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+    public function getTotalEntityCount(): int
+    {
+        return $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function save(Location $location): void
     {
         $this->entityManager->persist($location);

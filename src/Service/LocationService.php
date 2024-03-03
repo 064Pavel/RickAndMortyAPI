@@ -8,34 +8,43 @@ use App\Repository\LocationRepository;
 class LocationService
 {
     private LocationRepository $locationRepository;
-    public function __construct(LocationRepository $locationRepository)
+    private UrlGeneratorInterface $urlGenerator;
+    public function __construct(LocationRepository $locationRepository,
+                                UrlGeneratorInterface $urlGenerator)
     {
         $this->locationRepository = $locationRepository;
+        $this->urlGenerator = $urlGenerator;
     }
 
-    public function getLocations(): array
+    public function getLocations(int $page, int $perPage, string $sort, array $ids): array
     {
-        $locations = $this->locationRepository->findAll();
+        $locations = $this->locationRepository->findPaginated($page, $perPage, $sort, $ids);
 
         $data = [];
 
         foreach ($locations as $location) {
+
+            $characters = $location->getCharactersLocation()->toArray();
+            $charactersUrls = $this->urlGenerator->generateUrls($characters, 'character');
+
             $data[] = [
                 'id' => $location->getId(),
                 'name' => $location->getName(),
                 'type' => $location->getType(),
                 'dimension' => $location->getDimension(),
-                'created' => $location->getCreated()->format('Y-m-d'),
+                'residents' => $charactersUrls,
+                'url' => $this->urlGenerator->getCurrentUrl($location->getId(), 'location'),
+                'created' => $location->getCreated(),
             ];
         }
 
         return [
-            'items' => $data,
-            'meta' => [
-                'total' => 0,
-                'page' => 0,
-                'perPage' => 0,
+            'info' => [
+                'count' => $this->locationRepository->getTotalEntityCount(),
+                'page' => $page,
+                'perPage' => $perPage,
             ],
+            'results' => $data,
         ];
     }
 
@@ -43,12 +52,17 @@ class LocationService
     {
         $location = $this->locationRepository->find($locationId);
 
+        $characters = $location->getCharactersLocation()->toArray();
+        $charactersUrls = $this->urlGenerator->generateUrls($characters, 'character');
+
         return [
             'id' => $location->getId(),
             'name' => $location->getName(),
             'type' => $location->getType(),
             'dimension' => $location->getDimension(),
-            'created' => $location->getCreated()->format('Y-m-d'),
+            'residents' => $charactersUrls,
+            'url' => $this->urlGenerator->getCurrentUrl($location->getId(), 'location'),
+            'created' => $location->getCreated(),
         ];
     }
 
@@ -100,4 +114,5 @@ class LocationService
 
         return true;
     }
+
 }

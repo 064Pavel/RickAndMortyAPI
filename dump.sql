@@ -62,7 +62,17 @@ create table episode_character
 create unique index character_episode_episode_id_character_id
     on episode_character (episode_id, character_id);
 
+ALTER TABLE character
+    ADD CONSTRAINT fk_character_origin_id
+        FOREIGN KEY (origin_id)
+            REFERENCES location (id)
+            ON DELETE CASCADE;
 
+ALTER TABLE character
+    ADD CONSTRAINT fk_character_location_id
+        FOREIGN KEY (location_id)
+            REFERENCES location (id)
+            ON DELETE CASCADE;
 
 
 insert into location (id, name, type, dimension, created)

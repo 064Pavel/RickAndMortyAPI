@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Character;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,9 +17,23 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class CharacterRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $entityManager;
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
+        $this->entityManager = $entityManager;
         parent::__construct($registry, Character::class);
+    }
+
+    public function save(Character $character): void
+    {
+        $this->entityManager->persist($character);
+        $this->entityManager->flush();
+    }
+
+    public function remove(Character $character): void
+    {
+        $this->entityManager->remove($character);
+        $this->entityManager->flush();
     }
 
     //    /**

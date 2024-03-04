@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Attribute\MaxDepth;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: EpisodeRepository::class)]
 class Episode
@@ -30,6 +30,7 @@ class Episode
     private ?int $views = null;
 
     #[ORM\ManyToMany(targetEntity: Character::class, inversedBy: 'episodes')]
+    #[Groups(["serialization"])]
     private Collection $characters;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

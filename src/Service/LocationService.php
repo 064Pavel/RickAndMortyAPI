@@ -5,11 +5,13 @@ namespace App\Service;
 use App\DTO\LocationDto;
 use App\Entity\Location;
 use App\Repository\LocationRepository;
+
 class LocationService
 {
     private LocationRepository $locationRepository;
     private UrlGeneratorInterface $urlGenerator;
-    public function __construct(LocationRepository $locationRepository,
+
+    public function __construct(LocationRepository    $locationRepository,
                                 UrlGeneratorInterface $urlGenerator)
     {
         $this->locationRepository = $locationRepository;
@@ -21,21 +23,8 @@ class LocationService
         $locations = $this->locationRepository->findPaginated($page, $perPage, $sort, $ids);
 
         $data = [];
-
         foreach ($locations as $location) {
-
-            $characters = $location->getCharactersLocation()->toArray();
-            $charactersUrls = $this->urlGenerator->generateUrls($characters, 'character');
-
-            $data[] = [
-                'id' => $location->getId(),
-                'name' => $location->getName(),
-                'type' => $location->getType(),
-                'dimension' => $location->getDimension(),
-                'residents' => $charactersUrls,
-                'url' => $this->urlGenerator->getCurrentUrl($location->getId(), 'location'),
-                'created' => $location->getCreated(),
-            ];
+            $data[] = $this->formatLocationData($location);
         }
 
         return [
@@ -48,24 +37,15 @@ class LocationService
         ];
     }
 
-    public function getLocation(int $locationId): array
+    public function getLocation(int $locationId): ?array
     {
         $location = $this->locationRepository->find($locationId);
+        if (!$location) {
+            return null;
+        }
 
-        $characters = $location->getCharactersLocation()->toArray();
-        $charactersUrls = $this->urlGenerator->generateUrls($characters, 'character');
-
-        return [
-            'id' => $location->getId(),
-            'name' => $location->getName(),
-            'type' => $location->getType(),
-            'dimension' => $location->getDimension(),
-            'residents' => $charactersUrls,
-            'url' => $this->urlGenerator->getCurrentUrl($location->getId(), 'location'),
-            'created' => $location->getCreated(),
-        ];
+        return $this->formatLocationData($location);
     }
-
 
     public function createLocation(LocationDto $locationDto): Location
     {
@@ -113,6 +93,22 @@ class LocationService
         $this->locationRepository->remove($location);
 
         return true;
+    }
+
+    private function formatLocationData(Location $location): array
+    {
+        $characters = $location->getCharactersLocation()->toArray();
+        $charactersUrls = $this->urlGenerator->generateUrls($characters, 'character');
+
+        return [
+            'id' => $location->getId(),
+            'name' => $location->getName(),
+            'type' => $location->getType(),
+            'dimension' => $location->getDimension(),
+            'residents' => $charactersUrls,
+            'url' => $this->urlGenerator->getCurrentUrl($location->getId(), 'location'),
+            'created' => $location->getCreated(),
+        ];
     }
 
 }

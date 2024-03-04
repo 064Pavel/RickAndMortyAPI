@@ -18,7 +18,6 @@ class EpisodeService
         $this->urlGenerator = $urlGenerator;
     }
 
-
     public function getEpisodes(): array
     {
         $episodes = $this->episodeRepository->findAll();
@@ -26,43 +25,21 @@ class EpisodeService
         $data = [];
 
         foreach ($episodes as $episode) {
-
-            $characters = $episode->getCharacters()->toArray();
-            $characterUrls = $this->urlGenerator->generateUrls($characters, 'character');
-
-            $data[] = [
-                'id' => $episode->getId(),
-                'name' => $episode->getName(),
-                'air_date' => $episode->getAirDate(),
-                'episode' => $episode->getEpisode(),
-                'characters' => $characterUrls,
-                'views' => $episode->getViews(),
-                'url' => $this->urlGenerator->getCurrentUrl($episode->getId(), 'episode'),
-                'created' => $episode->getCreated()
-            ];
+            $data[] = $this->formatEpisodeData($episode);
         }
 
         return $data;
     }
 
-    public function getEpisode(int $episodeId): array
+    public function getEpisode(int $episodeId): ?array
     {
         $episode = $this->episodeRepository->find($episodeId);
 
-        $characters = $episode->getCharacters()->toArray();
+        if (!$episode) {
+            return null;
+        }
 
-        $characterUrls = $this->urlGenerator->generateUrls($characters, 'character');
-
-        return [
-            'id' => $episode->getId(),
-            'name' => $episode->getName(),
-            'air_date' => $episode->getAirDate(),
-            'episode' => $episode->getEpisode(),
-            'views' => $episode->getViews(),
-            'characters' => $characterUrls,
-            'url' => $this->urlGenerator->getCurrentUrl($episode->getId(), 'episode'),
-            'created' => $episode->getCreated()
-        ];
+        return $this->formatEpisodeData($episode);
     }
 
     public function createEpisode(EpisodeDto $episodeDto): Episode
@@ -115,5 +92,22 @@ class EpisodeService
         $this->episodeRepository->remove($episode);
 
         return true;
+    }
+
+    private function formatEpisodeData(Episode $episode): array
+    {
+        $characters = $episode->getCharacters()->toArray();
+        $characterUrls = $this->urlGenerator->generateUrls($characters, 'character');
+
+        return [
+            'id' => $episode->getId(),
+            'name' => $episode->getName(),
+            'air_date' => $episode->getAirDate(),
+            'episode' => $episode->getEpisode(),
+            'characters' => $characterUrls,
+            'views' => $episode->getViews(),
+            'url' => $this->urlGenerator->getCurrentUrl($episode->getId(), 'episode'),
+            'created' => $episode->getCreated()
+        ];
     }
 }

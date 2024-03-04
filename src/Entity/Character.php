@@ -7,6 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Attribute\MaxDepth;
 
 #[ORM\Entity(repositoryClass: CharacterRepository::class)]
 class Character
@@ -32,9 +34,11 @@ class Character
     private ?string $gender = null;
 
     #[ORM\ManyToOne(cascade: ["remove"], inversedBy: 'charactersOrigin')]
+    #[Groups(["serialization"])]
     private ?Location $origin = null;
 
     #[ORM\ManyToOne(cascade: ["remove"], inversedBy: 'charactersLocation')]
+    #[Groups(["serialization"])]
     private ?Location $location = null;
 
     #[ORM\Column(length: 255)]

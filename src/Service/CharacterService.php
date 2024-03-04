@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\DTO\CharacterDto;
@@ -7,6 +9,7 @@ use App\Entity\Character;
 use App\Repository\CharacterRepository;
 use App\Repository\EpisodeRepository;
 use App\Repository\LocationRepository;
+use DateTime;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class CharacterService
@@ -18,11 +21,11 @@ class CharacterService
 
     private SerializerInterface $serializer;
 
-    public function __construct(CharacterRepository   $characterRepository,
-                                UrlGeneratorInterface $urlGenerator,
-                                LocationRepository    $locationRepository,
-                                EpisodeRepository     $episodeRepository,
-                                SerializerInterface   $serializer)
+    public function __construct(CharacterRepository $characterRepository,
+        UrlGeneratorInterface $urlGenerator,
+        LocationRepository $locationRepository,
+        EpisodeRepository $episodeRepository,
+        SerializerInterface $serializer)
     {
         $this->characterRepository = $characterRepository;
         $this->urlGenerator = $urlGenerator;
@@ -87,33 +90,33 @@ class CharacterService
     private function formatCharacterData(Character $character): array
     {
         $episodes = $character->getEpisodes()->toArray();
-        $episodesUrls = $this->urlGenerator->generateUrls($episodes, "episode");
+        $episodesUrls = $this->urlGenerator->generateUrls($episodes, 'episode');
 
         $origin = $character->getOrigin();
         $location = $character->getLocation();
 
         $originData = [
-            "name" => $origin?->getName(),
-            "url" => $origin ? $this->urlGenerator->getCurrentUrl($origin->getId(), 'location') : null
+            'name' => $origin?->getName(),
+            'url' => $origin ? $this->urlGenerator->getCurrentUrl($origin->getId(), 'location') : null,
         ];
         $locationData = [
-            "name" => $location?->getName(),
-            "url" => $location ? $this->urlGenerator->getCurrentUrl($location->getId(), 'location') : null
+            'name' => $location?->getName(),
+            'url' => $location ? $this->urlGenerator->getCurrentUrl($location->getId(), 'location') : null,
         ];
 
         return [
-            "id" => $character->getId(),
-            "name" => $character->getName(),
-            "status" => $character->getStatus(),
-            "species" => $character->getSpecies(),
-            "type" => $character->getType(),
-            "gender" => $character->getGender(),
-            "origin" => $originData,
-            "location" => $locationData,
-            "image" => $character->getImage(),
-            "episode" => $episodesUrls,
-            "url" => $this->urlGenerator->getCurrentUrl($character->getId(), 'character'),
-            "created" => $character->getCreated(),
+            'id' => $character->getId(),
+            'name' => $character->getName(),
+            'status' => $character->getStatus(),
+            'species' => $character->getSpecies(),
+            'type' => $character->getType(),
+            'gender' => $character->getGender(),
+            'origin' => $originData,
+            'location' => $locationData,
+            'image' => $character->getImage(),
+            'episode' => $episodesUrls,
+            'url' => $this->urlGenerator->getCurrentUrl($character->getId(), 'character'),
+            'created' => $character->getCreated(),
         ];
     }
 
@@ -148,7 +151,7 @@ class CharacterService
             }
         }
 
-        $character->setCreated(new \DateTime());
+        $character->setCreated(new DateTime());
 
         $this->characterRepository->save($character);
 
@@ -158,6 +161,7 @@ class CharacterService
     private function serializeCharacter(Character $character, array $serializationContext = []): array
     {
         $serializedCharacter = $this->serializer->serialize($character, 'json', $serializationContext);
+
         return json_decode($serializedCharacter, true);
     }
 }

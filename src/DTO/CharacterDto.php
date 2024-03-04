@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\DTO;
 
 use App\Entity\Location;
-use Doctrine\Common\Collections\ArrayCollection;
+use DateTimeInterface;
 use Symfony\Component\Serializer\Attribute\SerializedName;
 use Symfony\Component\Validator\Constraints as Assert;
-use Doctrine\Common\Collections\Collection;
+
 class CharacterDto
 {
     #[Assert\NotBlank(message: 'Name cannot be blank')]
@@ -50,16 +52,16 @@ class CharacterDto
 
     #[Assert\NotBlank(message: 'Origin cannot be blank')]
     #[Assert\Type(Location::class)]
-    #[SerializedName("origin")]
+    #[SerializedName('origin')]
     private ?Location $origin;
 
     #[Assert\NotBlank(message: 'Location cannot be blank')]
     #[Assert\Type(Location::class)]
-    #[SerializedName("location")]
+    #[SerializedName('location')]
     private ?Location $location;
 
     #[Assert\Type(type: '\DateTimeInterface', message: 'Created must be a valid date and time')]
-    private ?\DateTimeInterface $created;
+    private ?DateTimeInterface $created;
 
     #[Assert\Type(type: 'string', message: 'Image must be a string')]
     #[Assert\Length(
@@ -79,9 +81,9 @@ class CharacterDto
         ?string $gender,
         ?Location $origin,
         ?Location $location,
-        ?\DateTimeInterface $created,
+        ?DateTimeInterface $created,
         ?string $image,
-        ?array $episodes
+        ?array $episodes,
     ) {
         $this->name = $name;
         $this->status = $status;
@@ -165,12 +167,12 @@ class CharacterDto
         $this->location = $location;
     }
 
-    public function getCreated(): ?\DateTimeInterface
+    public function getCreated(): ?DateTimeInterface
     {
         return $this->created;
     }
 
-    public function setCreated(?\DateTimeInterface $created): void
+    public function setCreated(?DateTimeInterface $created): void
     {
         $this->created = $created;
     }

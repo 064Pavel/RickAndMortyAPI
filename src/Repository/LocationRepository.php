@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\Location;
@@ -18,6 +20,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class LocationRepository extends ServiceEntityRepository
 {
     private EntityManagerInterface $entityManager;
+
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
@@ -38,6 +41,7 @@ class LocationRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
     public function getTotalEntityCount(): int
     {
         return $this->createQueryBuilder('p')

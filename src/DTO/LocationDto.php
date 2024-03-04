@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
+
 class LocationDto
 {
     #[Assert\NotBlank]
@@ -32,6 +35,7 @@ class LocationDto
         maxMessage: 'Your dimension cannot be longer than {{ limit }} characters',
     )]
     private ?string $dimension;
+
     public function __construct(?string $name, ?string $type, ?string $dimension)
     {
         $this->name = $name;

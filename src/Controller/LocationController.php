@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\DTO\LocationDto;
 use App\Service\LocationService;
-use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,9 +20,9 @@ class LocationController extends AbstractController
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
 
-    public function __construct(LocationService     $locationService,
-                                SerializerInterface $serializer,
-                                ValidatorInterface  $validator)
+    public function __construct(LocationService $locationService,
+        SerializerInterface $serializer,
+        ValidatorInterface $validator)
     {
         $this->locationService = $locationService;
         $this->serializer = $serializer;
@@ -64,8 +65,7 @@ class LocationController extends AbstractController
 
         $errors = $this->validator->validate($locationDto);
         if (count($errors) > 0) {
-
-            $errorsMessage = (string)$errors;
+            $errorsMessage = (string) $errors;
 
             return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
         }
@@ -82,8 +82,7 @@ class LocationController extends AbstractController
 
         $errors = $this->validator->validate($locationDto);
         if (count($errors) > 0) {
-
-            $errorsMessage = (string)$errors;
+            $errorsMessage = (string) $errors;
 
             return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
         }

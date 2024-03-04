@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\DTO\LocationDto;
 use App\Entity\Location;
 use App\Repository\LocationRepository;
+use DateTime;
 
 class LocationService
 {
     private LocationRepository $locationRepository;
     private UrlGeneratorInterface $urlGenerator;
 
-    public function __construct(LocationRepository    $locationRepository,
-                                UrlGeneratorInterface $urlGenerator)
+    public function __construct(LocationRepository $locationRepository,
+        UrlGeneratorInterface $urlGenerator)
     {
         $this->locationRepository = $locationRepository;
         $this->urlGenerator = $urlGenerator;
@@ -53,7 +56,7 @@ class LocationService
         $location->setName($locationDto->getName());
         $location->setType($locationDto->getType());
         $location->setDimension($locationDto->getDimension());
-        $location->setCreated(new \DateTime());
+        $location->setCreated(new DateTime());
 
         $this->locationRepository->save($location);
 
@@ -110,5 +113,4 @@ class LocationService
             'created' => $location->getCreated(),
         ];
     }
-
 }

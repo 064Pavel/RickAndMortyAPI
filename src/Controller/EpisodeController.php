@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\DTO\EpisodeDto;
-use App\Entity\Episode;
 use App\Service\EpisodeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,9 +20,9 @@ class EpisodeController extends AbstractController
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
 
-    public function __construct(EpisodeService      $episodeService,
-                                SerializerInterface $serializer,
-                                ValidatorInterface  $validator)
+    public function __construct(EpisodeService $episodeService,
+        SerializerInterface $serializer,
+        ValidatorInterface $validator)
     {
         $this->episodeService = $episodeService;
         $this->serializer = $serializer;
@@ -59,8 +60,7 @@ class EpisodeController extends AbstractController
 
         $errors = $this->validator->validate($episodeDto);
         if (count($errors) > 0) {
-
-            $errorsMessage = (string)$errors;
+            $errorsMessage = (string) $errors;
 
             return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
         }
@@ -77,8 +77,7 @@ class EpisodeController extends AbstractController
 
         $errors = $this->validator->validate($EpisodeDto);
         if (count($errors) > 0) {
-
-            $errorsMessage = (string)$errors;
+            $errorsMessage = (string) $errors;
 
             return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
         }

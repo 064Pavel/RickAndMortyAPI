@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\DTO\CharacterDto;
-use App\DTO\EpisodeDto;
 use App\Service\CharacterService;
-use App\Service\EpisodeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,9 +21,9 @@ class CharacterController extends AbstractController
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
 
-    public function __construct(CharacterService    $characterService,
-                                SerializerInterface $serializer,
-                                ValidatorInterface  $validator)
+    public function __construct(CharacterService $characterService,
+        SerializerInterface $serializer,
+        ValidatorInterface $validator)
     {
         $this->characterService = $characterService;
         $this->serializer = $serializer;
@@ -61,12 +61,13 @@ class CharacterController extends AbstractController
 
         $errors = $this->validator->validate($characterDto);
         if (count($errors) > 0) {
-            $errorsMessage = (string)$errors;
+            $errorsMessage = (string) $errors;
+
             return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
         }
 
         $context = [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => ['origin', 'location', 'episodes']
+            AbstractNormalizer::IGNORED_ATTRIBUTES => ['origin', 'location', 'episodes'],
         ];
 
         $data = $this->characterService->createCharacter($characterDto, $context);
@@ -81,14 +82,13 @@ class CharacterController extends AbstractController
 
         $errors = $this->validator->validate($characterDto);
         if (count($errors) > 0) {
-
-            $errorsMessage = (string)$errors;
+            $errorsMessage = (string) $errors;
 
             return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
         }
 
         $context = [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => ['origin', 'location', 'episodes']
+            AbstractNormalizer::IGNORED_ATTRIBUTES => ['origin', 'location', 'episodes'],
         ];
 
         $data = $this->characterService->updateCharacter($id, $characterDto, $context);

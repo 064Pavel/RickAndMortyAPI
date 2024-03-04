@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\DTO\EpisodeDto;
 use App\Entity\Episode;
 use App\Repository\EpisodeRepository;
+use DateTime;
 
 class EpisodeService
 {
@@ -12,7 +15,7 @@ class EpisodeService
     private UrlGeneratorInterface $urlGenerator;
 
     public function __construct(EpisodeRepository $episodeRepository,
-                                UrlGeneratorInterface $urlGenerator)
+        UrlGeneratorInterface $urlGenerator)
     {
         $this->episodeRepository = $episodeRepository;
         $this->urlGenerator = $urlGenerator;
@@ -49,7 +52,7 @@ class EpisodeService
         $episode->setAirDate($episodeDto->getAirDate());
         $episode->setEpisode($episodeDto->getEpisode());
         $episode->setViews($episodeDto->getViews());
-        $episode->setCreated(new \DateTime());
+        $episode->setCreated(new DateTime());
 
         $this->episodeRepository->save($episode);
 
@@ -77,7 +80,7 @@ class EpisodeService
             'air_date' => $episode->getAirDate(),
             'episode' => $episode->getEpisode(),
             'views' => $episode->getViews(),
-            'created' => $episode->getCreated()
+            'created' => $episode->getCreated(),
         ];
     }
 
@@ -85,7 +88,7 @@ class EpisodeService
     {
         $episode = $this->episodeRepository->find($episodeId);
 
-        if (!$episode){
+        if (!$episode) {
             return false;
         }
 
@@ -107,7 +110,7 @@ class EpisodeService
             'characters' => $characterUrls,
             'views' => $episode->getViews(),
             'url' => $this->urlGenerator->getCurrentUrl($episode->getId(), 'episode'),
-            'created' => $episode->getCreated()
+            'created' => $episode->getCreated(),
         ];
     }
 }

@@ -21,6 +21,9 @@ composer:
 php-shell:
 	$(DOCKER_PHP_FPM) sh
 
+csfix:
+	$(DOCKER_PHP_FPM) $(PHP) -dmemory_limit=-1 vendor/bin/php-cs-fixer fix -vvv --no-ansi
+
 db-shell:
 	$(DOCKER_DB) psql -U user -d characters
 

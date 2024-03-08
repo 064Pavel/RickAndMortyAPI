@@ -1,0 +1,30 @@
+version: '3.7'
+services:
+  php-fpm:
+    build: './docker/php-fpm'
+    ports:
+      - 9000:9000
+    volumes:
+      - ./:/var/www:cached
+
+  nginx:
+    build: './docker/nginx'
+    ports:
+      - 8080:80
+    volumes:
+      - './:/var/www:cached'
+    depends_on:
+      - php-fpm
+
+  database:
+    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    environment:
+      POSTGRES_DB: characters
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: user
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql:rw
+
+volumes:
+  database_data:

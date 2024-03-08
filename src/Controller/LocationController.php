@@ -33,11 +33,9 @@ class LocationController extends AbstractController
     public function getAllLocation(Request $request): JsonResponse
     {
         $page = $request->query->getInt('page', 1);
-        $perPage = $request->query->getInt('perPage', 10);
-        $sort = $request->query->get('sort', '-id');
-        $ids = $request->query->get('ids') ?: [];
+        $limit = $request->query->getInt('limit', 10);
 
-        $data = $this->locationService->getLocations($page, $perPage, $sort, $ids);
+        $data = $this->locationService->getLocations($page, $limit);
 
         if (!$data) {
             return $this->json([]);

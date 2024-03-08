@@ -32,7 +32,10 @@ class EpisodeController extends AbstractController
     #[Route('/api/episode', name: 'all.episode', methods: 'GET')]
     public function getAllEpisode(Request $request): JsonResponse
     {
-        $data = $this->episodeService->getEpisodes();
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 10);
+
+        $data = $this->episodeService->getEpisodes($page, $limit);
 
         if (!$data) {
             return $this->json([]);

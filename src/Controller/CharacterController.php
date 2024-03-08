@@ -33,7 +33,10 @@ class CharacterController extends AbstractController
     #[Route('/api/character', name: 'all.character', methods: 'GET')]
     public function getAllCharacter(Request $request): JsonResponse
     {
-        $data = $this->characterService->getCharacters();
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 10);
+
+        $data = $this->characterService->getCharacters($page, $limit);
 
         if (!$data) {
             return $this->json([]);

@@ -38,4 +38,12 @@ class EpisodeRepository extends ServiceEntityRepository
         $this->entityManager->remove($episode);
         $this->entityManager->flush();
     }
+
+    public function getTotalEntityCount(): int
+    {
+        return $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

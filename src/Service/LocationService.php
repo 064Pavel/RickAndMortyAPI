@@ -7,35 +7,46 @@ namespace App\Service;
 use App\DTO\LocationDto;
 use App\Entity\Location;
 use App\Repository\LocationRepository;
+use App\Tools\PaginatorInterface;
+use App\Tools\UrlGeneratorInterface;
 use DateTime;
 
 class LocationService
 {
     private LocationRepository $locationRepository;
     private UrlGeneratorInterface $urlGenerator;
+    private PaginatorInterface $paginator;
 
     public function __construct(LocationRepository $locationRepository,
-        UrlGeneratorInterface $urlGenerator)
+        UrlGeneratorInterface $urlGenerator, PaginatorInterface $paginator)
     {
         $this->locationRepository = $locationRepository;
         $this->urlGenerator = $urlGenerator;
+        $this->paginator = $paginator;
     }
 
-    public function getLocations(int $page, int $perPage, string $sort, array $ids): array
+    public function getLocations(int $page, int $limit): array
     {
-        $locations = $this->locationRepository->findPaginated($page, $perPage, $sort, $ids);
+        $locations = $this->locationRepository->findAll();
 
         $data = [];
         foreach ($locations as $location) {
             $data[] = $this->formatLocationData($location);
         }
 
+        $count = $this->locationRepository->getTotalEntityCount();
+
+        $options = [
+            'page' => $page,
+            'entityName' => 'location',
+            'limit' => $limit,
+        ];
+
+        $data = $this->paginator->paginate($data, $options);
+        $info = $this->paginator->formatInfo($data, $options, $count);
+
         return [
-            'info' => [
-                'count' => $this->locationRepository->getTotalEntityCount(),
-                'page' => $page,
-                'perPage' => $perPage,
-            ],
+            'info' => $info,
             'results' => $data,
         ];
     }

@@ -9,6 +9,8 @@ use App\Entity\Character;
 use App\Repository\CharacterRepository;
 use App\Repository\EpisodeRepository;
 use App\Repository\LocationRepository;
+use App\Tools\PaginatorInterface;
+use App\Tools\UrlGeneratorInterface;
 use DateTime;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -18,23 +20,24 @@ class CharacterService
     private LocationRepository $locationRepository;
     private EpisodeRepository $episodeRepository;
     private UrlGeneratorInterface $urlGenerator;
-
     private SerializerInterface $serializer;
+    private PaginatorInterface $paginator;
 
     public function __construct(CharacterRepository $characterRepository,
         UrlGeneratorInterface $urlGenerator,
         LocationRepository $locationRepository,
         EpisodeRepository $episodeRepository,
-        SerializerInterface $serializer)
+        SerializerInterface $serializer, PaginatorInterface $paginator)
     {
         $this->characterRepository = $characterRepository;
         $this->urlGenerator = $urlGenerator;
         $this->locationRepository = $locationRepository;
         $this->episodeRepository = $episodeRepository;
         $this->serializer = $serializer;
+        $this->paginator = $paginator;
     }
 
-    public function getCharacters(): array
+    public function getCharacters(int $page, int $limit): array
     {
         $characters = $this->characterRepository->findAll();
 
@@ -44,7 +47,22 @@ class CharacterService
             $data[] = $this->formatCharacterData($character);
         }
 
-        return $data;
+
+        $count = $this->episodeRepository->getTotalEntityCount();
+
+        $options = [
+            'page' => $page,
+            'entityName' => 'location',
+            'limit' => $limit,
+        ];
+
+        $data = $this->paginator->paginate($data, $options);
+        $info = $this->paginator->formatInfo($data, $options, $count);
+
+        return [
+            'info' => $info,
+            'results' => $data,
+        ];
     }
 
     public function getCharacter(int $id): ?array

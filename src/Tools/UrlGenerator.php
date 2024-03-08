@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Tools;
+
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 class UrlGenerator implements UrlGeneratorInterface
 {
@@ -11,7 +13,10 @@ class UrlGenerator implements UrlGeneratorInterface
         return array_map(function ($item) use ($entityUrl) {
             return "https://rickandmortyapi.com/api/{$entityUrl}/{$item->getId()}";
         }, $items);
+
     }
+
+
 
     public function getCurrentUrl(int $id, string $entityUrl): string
     {

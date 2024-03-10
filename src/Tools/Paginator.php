@@ -16,7 +16,7 @@ class Paginator implements PaginatorInterface
         return array_slice($data, $offset, $limit);
     }
 
-    public function formatInfo(array $data, array $options = [], int $count): array
+    public function formatInfo(array $data, int $count, array $options = []): array
     {
         $page = $options['page'] ?? 1;
         $entityName = $options['entityName'] ?? '';

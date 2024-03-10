@@ -25,9 +25,13 @@ class EpisodeService
         $this->paginator = $paginator;
     }
 
-    public function getEpisodes(int $page, int $limit): array
+    public function getEpisodes(int $page, int $limit, array $queries): array
     {
-        $episodes = $this->episodeRepository->findAll();
+        if (empty($queries)) {
+            $episodes = $this->episodeRepository->findAll();
+        } else {
+            $episodes = $this->episodeRepository->findByFilters($queries);
+        }
 
         $data = [];
 
@@ -44,7 +48,7 @@ class EpisodeService
         ];
 
         $data = $this->paginator->paginate($data, $options);
-        $info = $this->paginator->formatInfo($data, $options, $count);
+        $info = $this->paginator->formatInfo($data, $count, $options);
 
         return [
             'info' => $info,

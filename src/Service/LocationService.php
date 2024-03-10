@@ -25,9 +25,13 @@ class LocationService
         $this->paginator = $paginator;
     }
 
-    public function getLocations(int $page, int $limit): array
+    public function getLocations(int $page, int $limit, array $queries = []): array
     {
-        $locations = $this->locationRepository->findAll();
+        if (empty($queries)) {
+            $locations = $this->locationRepository->findAll();
+        } else {
+            $locations = $this->locationRepository->findByFilters($queries);
+        }
 
         $data = [];
         foreach ($locations as $location) {
@@ -43,11 +47,12 @@ class LocationService
         ];
 
         $data = $this->paginator->paginate($data, $options);
-        $info = $this->paginator->formatInfo($data, $options, $count);
+        $info = $this->paginator->formatInfo($data, $count, $options);
 
         return [
             'info' => $info,
             'results' => $data,
+            'q' => $queries,
         ];
     }
 

@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\DTO\EpisodeDto;
 use App\Service\EpisodeService;
+use App\Tools\QueryFilterInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,13 +21,16 @@ class EpisodeController extends AbstractController
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
 
+    private QueryFilterInterface $queryFilter;
     public function __construct(EpisodeService $episodeService,
         SerializerInterface $serializer,
-        ValidatorInterface $validator)
+        ValidatorInterface $validator,
+        QueryFilterInterface $queryFilter)
     {
         $this->episodeService = $episodeService;
         $this->serializer = $serializer;
         $this->validator = $validator;
+        $this->queryFilter = $queryFilter;
     }
 
     #[Route('/api/episode', name: 'all.episode', methods: 'GET')]
@@ -35,7 +39,11 @@ class EpisodeController extends AbstractController
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', 10);
 
-        $data = $this->episodeService->getEpisodes($page, $limit);
+        $allowedFilters = ['name', 'episode'];
+
+        $queries = $this->queryFilter->filter($request, $allowedFilters);
+
+        $data = $this->episodeService->getEpisodes($page, $limit, $queries);
 
         if (!$data) {
             return $this->json([]);

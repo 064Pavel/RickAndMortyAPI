@@ -33,6 +33,18 @@ class EpisodeRepository extends ServiceEntityRepository
         $this->entityManager->flush();
     }
 
+    public function findByFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('e');
+
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("e.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     public function remove(Episode $episode): void
     {
         $this->entityManager->remove($episode);

@@ -37,9 +37,13 @@ class CharacterService
         $this->paginator = $paginator;
     }
 
-    public function getCharacters(int $page, int $limit): array
+    public function getCharacters(int $page, int $limit, array $queries): array
     {
-        $characters = $this->characterRepository->findAll();
+        if (empty($queries)) {
+            $characters = $this->characterRepository->findAll();
+        } else {
+            $characters = $this->characterRepository->findByFilters($queries);
+        }
 
         $data = [];
 
@@ -57,7 +61,7 @@ class CharacterService
         ];
 
         $data = $this->paginator->paginate($data, $options);
-        $info = $this->paginator->formatInfo($data, $options, $count);
+        $info = $this->paginator->formatInfo($data, $count, $options);
 
         return [
             'info' => $info,

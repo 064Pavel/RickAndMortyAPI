@@ -33,6 +33,19 @@ class CharacterRepository extends ServiceEntityRepository
         $this->entityManager->flush();
     }
 
+    public function findByFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('c');
+
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("c.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+
     public function remove(Character $character): void
     {
         $this->entityManager->remove($character);

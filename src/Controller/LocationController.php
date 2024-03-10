@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\DTO\LocationDto;
 use App\Service\LocationService;
+use App\Tools\QueryFilterInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,14 +20,17 @@ class LocationController extends AbstractController
     private LocationService $locationService;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
+    private QueryFilterInterface $queryFilter;
 
     public function __construct(LocationService $locationService,
         SerializerInterface $serializer,
-        ValidatorInterface $validator)
+        ValidatorInterface $validator,
+        QueryFilterInterface $queryFilter)
     {
         $this->locationService = $locationService;
         $this->serializer = $serializer;
         $this->validator = $validator;
+        $this->queryFilter = $queryFilter;
     }
 
     #[Route('/api/location', name: 'all.location', methods: 'GET')]
@@ -35,7 +39,11 @@ class LocationController extends AbstractController
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', 10);
 
-        $data = $this->locationService->getLocations($page, $limit);
+        $allowedFilters = ['name', 'type', 'dimension'];
+
+        $queries = $this->queryFilter->filter($request, $allowedFilters);
+
+        $data = $this->locationService->getLocations($page, $limit, $queries);
 
         if (!$data) {
             return $this->json([]);

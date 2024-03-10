@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\DTO\CharacterDto;
 use App\Service\CharacterService;
+use App\Tools\QueryFilterInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,14 +21,17 @@ class CharacterController extends AbstractController
     private CharacterService $characterService;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
+    private QueryFilterInterface $queryFilter;
 
     public function __construct(CharacterService $characterService,
         SerializerInterface $serializer,
-        ValidatorInterface $validator)
+        ValidatorInterface $validator,
+        QueryFilterInterface $queryFilter)
     {
         $this->characterService = $characterService;
         $this->serializer = $serializer;
         $this->validator = $validator;
+        $this->queryFilter = $queryFilter;
     }
 
     #[Route('/api/character', name: 'all.character', methods: 'GET')]
@@ -36,7 +40,11 @@ class CharacterController extends AbstractController
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', 10);
 
-        $data = $this->characterService->getCharacters($page, $limit);
+        $allowedFilters = ['name', 'status', 'species', 'type', 'gender'];
+
+        $queries = $this->queryFilter->filter($request, $allowedFilters);
+
+        $data = $this->characterService->getCharacters($page, $limit, $queries);
 
         if (!$data) {
             return $this->json([]);

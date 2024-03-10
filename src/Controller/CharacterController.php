@@ -50,7 +50,19 @@ class CharacterController extends AbstractController
             return $this->json([]);
         }
 
-        return $this->json($data, Response::HTTP_OK);
+        return $this->json($data);
+    }
+
+    #[Route('/api/characters/{ids}', name: 'all.character.by.ids', methods: 'GET')]
+    public function getAllCharacterByIds(string $ids): JsonResponse
+    {
+        $data = $this->characterService->getCharactersByIds($ids);
+
+        if (empty($data)) {
+            return $this->json(['message' => 'nothing could be found on the request']);
+        }
+
+        return $this->json($data);
     }
 
     #[Route('/api/character/{id}', name: 'get.character', methods: 'GET')]

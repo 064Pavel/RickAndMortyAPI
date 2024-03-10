@@ -56,6 +56,25 @@ class LocationService
         ];
     }
 
+    public function getLocationByIds(string $ids): array
+    {
+        $locationIds = explode(',', $ids);
+
+        $data = [];
+
+        foreach ($locationIds as $id) {
+            $character = $this->locationRepository->find($id);
+
+            if (!$character) {
+                continue;
+            }
+
+            $data[] = $this->formatLocationData($character);
+        }
+
+        return $data;
+    }
+
     public function getLocation(int $locationId): ?array
     {
         $location = $this->locationRepository->find($locationId);

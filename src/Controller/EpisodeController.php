@@ -22,6 +22,7 @@ class EpisodeController extends AbstractController
     private ValidatorInterface $validator;
 
     private QueryFilterInterface $queryFilter;
+
     public function __construct(EpisodeService $episodeService,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
@@ -50,6 +51,18 @@ class EpisodeController extends AbstractController
         }
 
         return $this->json($data, Response::HTTP_OK);
+    }
+
+    #[Route('/api/episodes/{ids}', name: 'all.episode.by.ids', methods: 'GET')]
+    public function getAllEpisodeByIds(string $ids): JsonResponse
+    {
+        $data = $this->episodeService->getEpisodesByIds($ids);
+
+        if (empty($data)) {
+            return $this->json(['message' => 'nothing could be found on the request']);
+        }
+
+        return $this->json($data);
     }
 
     #[Route('/api/episode/{id}', name: 'get.episode', methods: 'GET')]

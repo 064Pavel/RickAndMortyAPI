@@ -45,7 +45,6 @@ class CharacterRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
-
     public function remove(Character $character): void
     {
         $this->entityManager->remove($character);

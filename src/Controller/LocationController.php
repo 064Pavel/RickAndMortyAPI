@@ -52,6 +52,18 @@ class LocationController extends AbstractController
         return $this->json($data, Response::HTTP_OK);
     }
 
+    #[Route('/api/locations/{ids}', name: 'all.location.by.ids', methods: 'GET')]
+    public function getAllLocationByIds(string $ids): JsonResponse
+    {
+        $data = $this->locationService->getLocationByIds($ids);
+
+        if (empty($data)) {
+            return $this->json(['message' => 'nothing could be found on the request']);
+        }
+
+        return $this->json($data);
+    }
+
     #[Route('/api/location/{id}', name: 'get.location', methods: 'GET')]
     public function getLocation(int $id): JsonResponse
     {

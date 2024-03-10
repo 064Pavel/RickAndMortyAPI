@@ -51,7 +51,6 @@ class CharacterService
             $data[] = $this->formatCharacterData($character);
         }
 
-
         $count = $this->episodeRepository->getTotalEntityCount();
 
         $options = [
@@ -67,6 +66,25 @@ class CharacterService
             'info' => $info,
             'results' => $data,
         ];
+    }
+
+    public function getCharactersByIds(string $ids): array
+    {
+        $characterIds = explode(',', $ids);
+
+        $data = [];
+
+        foreach ($characterIds as $id) {
+            $character = $this->characterRepository->find($id);
+
+            if (!$character) {
+                continue;
+            }
+
+            $data[] = $this->formatCharacterData($character);
+        }
+
+        return $data;
     }
 
     public function getCharacter(int $id): ?array

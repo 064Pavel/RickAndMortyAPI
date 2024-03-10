@@ -56,6 +56,25 @@ class EpisodeService
         ];
     }
 
+    public function getEpisodesByIds(string $ids): array
+    {
+        $episodesIds = explode(',', $ids);
+
+        $data = [];
+
+        foreach ($episodesIds as $id) {
+            $character = $this->episodeRepository->find($id);
+
+            if (!$character) {
+                continue;
+            }
+
+            $data[] = $this->formatEpisodeData($character);
+        }
+
+        return $data;
+    }
+
     public function getEpisode(int $episodeId): ?array
     {
         $episode = $this->episodeRepository->find($episodeId);

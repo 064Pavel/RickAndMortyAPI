@@ -114,6 +114,69 @@ class CharacterService
         return $this->processCharacterData($characterDto, $character, $serializationContext);
     }
 
+    public function patchCharacter(int $id, CharacterDto $characterDto): ?array
+    {
+        $character = $this->characterRepository->find($id);
+
+        if (!$character) {
+            return null;
+        }
+
+        if ($name = $characterDto->getName()) {
+            $character->setName($name);
+        }
+        if ($status = $characterDto->getStatus()) {
+            $character->setStatus($status);
+        }
+        if ($species = $characterDto->getSpecies()) {
+            $character->setSpecies($species);
+        }
+        if ($type = $characterDto->getType()) {
+            $character->setType($type);
+        }
+        if ($gender = $characterDto->getGender()) {
+            $character->setGender($gender);
+        }
+        if ($image = $characterDto->getImage()) {
+            $character->setImage($image);
+        }
+
+        $locationDto = $characterDto->getLocation();
+        if (null !== $locationDto) {
+            $locationId = $locationDto->getId();
+            if (null !== $locationId) {
+                $location = $this->locationRepository->find($locationId);
+                if ($location) {
+                    $character->setLocation($location);
+                }
+            }
+        }
+
+        $originDto = $characterDto->getOrigin();
+        if (null !== $originDto) {
+            $originId = $originDto->getId();
+            if (null !== $originId) {
+                $origin = $this->locationRepository->find($originId);
+                if ($origin) {
+                    $character->setOrigin($origin);
+                }
+            }
+        }
+
+        if (!empty($episodes = $characterDto->getEpisodes())) {
+            foreach ($episodes as $episodeId) {
+                $episode = $this->episodeRepository->find($episodeId);
+                if ($episode) {
+                    $character->addEpisode($episode);
+                }
+            }
+        }
+
+        $this->characterRepository->save($character);
+
+        return $this->formatCharacterData($character);
+    }
+
     public function deleteCharacter(int $id): bool
     {
         $character = $this->characterRepository->find($id);

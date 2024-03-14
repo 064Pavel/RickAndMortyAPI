@@ -10,6 +10,7 @@ use App\Repository\EpisodeRepository;
 use App\Tools\PaginatorInterface;
 use App\Tools\UrlGeneratorInterface;
 use DateTime;
+use ReflectionClass;
 
 class EpisodeService
 {
@@ -100,12 +101,12 @@ class EpisodeService
         return $episode;
     }
 
-    public function updateEpisode(int $episodeId, EpisodeDto $episodeDto): ?array
+    public function updateEpisode(int $id, EpisodeDto $episodeDto): ?array
     {
-        $episode = $this->episodeRepository->find($episodeId);
+        $episode = $this->episodeRepository->find($id);
 
         if (!$episode) {
-            return null;
+            return [];
         }
 
         $episode->setName($episodeDto->getName());
@@ -115,16 +116,45 @@ class EpisodeService
 
         $this->episodeRepository->save($episode);
 
-        return [
-            'id' => $episode->getId(),
-            'name' => $episode->getName(),
-            'air_date' => $episode->getAirDate(),
-            'episode' => $episode->getEpisode(),
-            'views' => $episode->getViews(),
-            'created' => $episode->getCreated(),
-        ];
+        return $this->formatEpisodeData($episode);
     }
 
+    public function patchLocation(int $id, EpisodeDto $episodeDto): array
+    {
+        $episode = $this->episodeRepository->find($id);
+
+        if (!$episode) {
+            return [];
+        }
+
+        $episode = $this->updateLocationFields($episode, $episodeDto);
+
+        $this->episodeRepository->save($episode);
+
+        return $this->formatEpisodeData($episode);
+    }
+
+    private function updateLocationFields(Episode $episode, EpisodeDto $episodeDto): Episode
+    {
+        $reflectionClass = new ReflectionClass($episodeDto);
+        $properties = $reflectionClass->getProperties();
+
+        foreach ($properties as $property) {
+            $propertyName = $property->getName();
+            $getterMethod = 'get' . ucfirst($propertyName);
+            $setterMethod = 'set' . ucfirst($propertyName);
+
+            if (method_exists($episodeDto, $getterMethod) && method_exists($episode, $setterMethod)) {
+                $value = $episodeDto->$getterMethod();
+
+                if (null !== $value) {
+                    $episode->$setterMethod($value);
+                }
+            }
+        }
+
+        return $episode;
+    }
     public function deleteEpisode(int $episodeId): bool
     {
         $episode = $this->episodeRepository->find($episodeId);
@@ -154,4 +184,6 @@ class EpisodeService
             'created' => $episode->getCreated(),
         ];
     }
+
+
 }

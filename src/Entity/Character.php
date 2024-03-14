@@ -35,11 +35,11 @@ class Character
     #[ORM\Column(length: 255)]
     private ?string $gender = null;
 
-    #[ORM\ManyToOne(cascade: ['remove'], inversedBy: 'charactersOrigin')]
+    #[ORM\ManyToOne(cascade: ['remove', 'persist'], inversedBy: 'charactersOrigin')]
     #[Groups(['serialization'])]
     private ?Location $origin = null;
 
-    #[ORM\ManyToOne(cascade: ['remove'], inversedBy: 'charactersLocation')]
+    #[ORM\ManyToOne(cascade: ['remove', 'persist'], inversedBy: 'charactersLocation')]
     #[Groups(['serialization'])]
     private ?Location $location = null;
 

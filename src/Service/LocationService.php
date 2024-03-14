@@ -10,19 +10,19 @@ use App\Repository\LocationRepository;
 use App\Tools\PaginatorInterface;
 use App\Tools\UrlGeneratorInterface;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
+use ReflectionClass;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class LocationService
 {
-    private LocationRepository $locationRepository;
-    private UrlGeneratorInterface $urlGenerator;
-    private PaginatorInterface $paginator;
+    private PropertyAccessorInterface $propertyAccessor;
 
-    public function __construct(LocationRepository $locationRepository,
-        UrlGeneratorInterface $urlGenerator, PaginatorInterface $paginator)
+    public function __construct(private LocationRepository $locationRepository,
+        private UrlGeneratorInterface $urlGenerator, private PaginatorInterface $paginator, private EntityManagerInterface $entityManager)
     {
-        $this->locationRepository = $locationRepository;
-        $this->urlGenerator = $urlGenerator;
-        $this->paginator = $paginator;
+        $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
     }
 
     public function getLocations(int $page, int $limit, array $queries = []): array
@@ -52,7 +52,6 @@ class LocationService
         return [
             'info' => $info,
             'results' => $data,
-            'q' => $queries,
         ];
     }
 
@@ -85,7 +84,7 @@ class LocationService
         return $this->formatLocationData($location);
     }
 
-    public function createLocation(LocationDto $locationDto): Location
+    public function createLocation(LocationDto $locationDto): array
     {
         $location = new Location();
         $location->setName($locationDto->getName());
@@ -95,7 +94,7 @@ class LocationService
 
         $this->locationRepository->save($location);
 
-        return $location;
+        return $this->formatLocationData($location);
     }
 
     public function updateLocation(int $id, LocationDto $locationDto): ?array
@@ -103,7 +102,7 @@ class LocationService
         $location = $this->locationRepository->find($id);
 
         if (!$location) {
-            return null;
+            return [];
         }
 
         $location->setName($locationDto->getName());
@@ -112,12 +111,44 @@ class LocationService
 
         $this->locationRepository->save($location);
 
-        return [
-            'id' => $location->getId(),
-            'name' => $location->getName(),
-            'type' => $location->getType(),
-            'dimension' => $location->getDimension(),
-        ];
+        return $this->formatLocationData($location);
+    }
+
+    public function patchLocation(int $id, LocationDto $locationDto): array
+    {
+        $location = $this->entityManager->getRepository(Location::class)->find($id);
+
+        if (!$location) {
+            return [];
+        }
+
+        $location = $this->updateLocationFields($location, $locationDto);
+
+        $this->locationRepository->save($location);
+
+        return $this->formatLocationData($location);
+    }
+
+    private function updateLocationFields(Location $location, LocationDto $locationDto): Location
+    {
+        $reflectionClass = new ReflectionClass($locationDto);
+        $properties = $reflectionClass->getProperties();
+
+        foreach ($properties as $property) {
+            $propertyName = $property->getName();
+            $getterMethod = 'get' . ucfirst($propertyName);
+            $setterMethod = 'set' . ucfirst($propertyName);
+
+            if (method_exists($locationDto, $getterMethod) && method_exists($location, $setterMethod)) {
+                $value = $locationDto->$getterMethod();
+
+                if (null !== $value) {
+                    $location->$setterMethod($value);
+                }
+            }
+        }
+
+        return $location;
     }
 
     public function deleteLocation(int $id): bool

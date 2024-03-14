@@ -63,6 +63,7 @@ class CharacterDto
     #[Assert\Type(type: '\DateTimeInterface', message: 'Created must be a valid date and time')]
     private ?DateTimeInterface $created;
 
+    #[Assert\NotBlank(message: 'Image cannot be blank')]
     #[Assert\Type(type: 'string', message: 'Image must be a string')]
     #[Assert\Length(
         max: 255,

@@ -58,4 +58,17 @@ class CharacterRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    public function getTotalEntityCountWithFilters(array $filters): int
+    {
+        $qb = $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)');
+
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("l.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
 }

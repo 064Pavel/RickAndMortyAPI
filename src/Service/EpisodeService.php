@@ -30,22 +30,22 @@ class EpisodeService
     {
         if (empty($queries)) {
             $episodes = $this->episodeRepository->findAll();
+            $count = $this->episodeRepository->getTotalEntityCount();
         } else {
             $episodes = $this->episodeRepository->findByFilters($queries);
+            $count = $this->episodeRepository->getTotalEntityCountWithFilters($queries);
         }
 
         $data = [];
-
         foreach ($episodes as $episode) {
             $data[] = $this->formatEpisodeData($episode);
         }
 
-        $count = $this->episodeRepository->getTotalEntityCount();
-
         $options = [
             'page' => $page,
-            'entityName' => 'location',
+            'entityName' => 'episode',
             'limit' => $limit,
+            'query' => $queries,
         ];
 
         $data = $this->paginator->paginate($data, $options);

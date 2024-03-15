@@ -69,7 +69,7 @@ class LocationController extends AbstractController
         return $this->json(['result' => $data]);
     }
 
-    #[Route('/api/location', name: 'create.episode', methods: 'POST')]
+    #[Route('/api/location', name: 'create.location', methods: 'POST')]
     public function createLocation(Request $request): JsonResponse
     {
         $locationDto = $this->processLocationDtoRequest($request);

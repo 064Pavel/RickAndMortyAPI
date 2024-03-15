@@ -29,8 +29,10 @@ class LocationService
     {
         if (empty($queries)) {
             $locations = $this->locationRepository->findAll();
+            $count = $this->locationRepository->getTotalEntityCount();
         } else {
             $locations = $this->locationRepository->findByFilters($queries);
+            $count = $this->locationRepository->getTotalEntityCountWithFilters($queries);
         }
 
         $data = [];
@@ -38,12 +40,11 @@ class LocationService
             $data[] = $this->formatLocationData($location);
         }
 
-        $count = $this->locationRepository->getTotalEntityCount();
-
         $options = [
             'page' => $page,
             'entityName' => 'location',
             'limit' => $limit,
+            'query' => $queries,
         ];
 
         $data = $this->paginator->paginate($data, $options);

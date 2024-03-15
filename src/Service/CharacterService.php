@@ -41,8 +41,10 @@ class CharacterService
     {
         if (empty($queries)) {
             $characters = $this->characterRepository->findAll();
+            $count = $this->characterRepository->getTotalEntityCount();
         } else {
             $characters = $this->characterRepository->findByFilters($queries);
+            $count = $this->characterRepository->getTotalEntityCountWithFilters($queries);
         }
 
         $data = [];
@@ -51,12 +53,11 @@ class CharacterService
             $data[] = $this->formatCharacterData($character);
         }
 
-        $count = $this->episodeRepository->getTotalEntityCount();
-
         $options = [
             'page' => $page,
-            'entityName' => 'location',
+            'entityName' => 'character',
             'limit' => $limit,
+            'query' => $queries,
         ];
 
         $data = $this->paginator->paginate($data, $options);
@@ -164,6 +165,8 @@ class CharacterService
         }
 
         if (!empty($episodes = $characterDto->getEpisodes())) {
+
+            $character->getEpisodes()->clear();
             foreach ($episodes as $episodeId) {
                 $episode = $this->episodeRepository->find($episodeId);
                 if ($episode) {

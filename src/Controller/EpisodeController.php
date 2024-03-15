@@ -35,7 +35,7 @@ class EpisodeController extends AbstractController
         $this->queryFilter = $queryFilter;
     }
 
-    #[Route('/api/episode', name: 'all.episode', methods: 'GET')]
+    #[Route('/api/episode', name: 'all.episode', methods: ['GET'])]
     public function getAllEpisode(Request $request): JsonResponse
     {
         $page = $request->query->getInt('page', 1);
@@ -78,7 +78,7 @@ class EpisodeController extends AbstractController
         return $this->json(['result' => $data], Response::HTTP_OK);
     }
 
-    #[Route('/api/episode', name: 'create.episode', methods: 'POST')]
+    #[Route('/api/episode', name: 'create.episode', methods: ['POST'])]
     public function createEpisode(Request $request): JsonResponse
     {
         $episodeDto = $this->processEpisodeDtoRequest($request);

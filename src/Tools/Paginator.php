@@ -21,10 +21,11 @@ class Paginator implements PaginatorInterface
         $page = $options['page'] ?? 1;
         $entityName = $options['entityName'] ?? '';
         $limit = $options['limit'] ?? 10;
+        $queryParameters = $options['query'] ?? [];
 
         $pages = ceil($count / $limit);
-        $next = ($page < $pages) ? $this->getUrl($page + 1, $entityName) : null;
-        $prev = ($page > 1) ? $this->getUrl($page - 1, $entityName) : null;
+        $next = ($page < $pages) ? $this->getUrl($page + 1, $entityName, $queryParameters) : null;
+        $prev = ($page > 1) ? $this->getUrl($page - 1, $entityName, $queryParameters) : null;
 
         return [
             'count' => $count,
@@ -34,11 +35,17 @@ class Paginator implements PaginatorInterface
         ];
     }
 
-    private function getUrl(int $page, string $entityName): string
+
+    private function getUrl(int $page, string $entityName, array $queryParameters = []): string
     {
         $url = $_ENV['API_ROUTE'];
         $url .= "$entityName/?page=" . $page;
 
+        if (!empty($queryParameters)) {
+            $url .= '&' . http_build_query($queryParameters);
+        }
+
         return $url;
     }
+
 }

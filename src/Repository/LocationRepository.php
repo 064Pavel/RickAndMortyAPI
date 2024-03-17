@@ -17,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Location[]    findAll()
  * @method Location[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class LocationRepository extends ServiceEntityRepository
+class LocationRepository extends ServiceEntityRepository implements EntityRepositoryInterface
 {
     private EntityManagerInterface $entityManager;
 
@@ -47,18 +47,6 @@ class LocationRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    public function save(Location $location): void
-    {
-        $this->entityManager->persist($location);
-        $this->entityManager->flush();
-    }
-
-    public function remove(Location $location): void
-    {
-        $this->entityManager->remove($location);
-        $this->entityManager->flush();
-    }
-
     public function getTotalEntityCountWithFilters(array $filters): int
     {
         $qb = $this->createQueryBuilder('l')
@@ -71,5 +59,4 @@ class LocationRepository extends ServiceEntityRepository
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
-
 }

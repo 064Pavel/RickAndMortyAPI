@@ -165,7 +165,6 @@ class CharacterService
         }
 
         if (!empty($episodes = $characterDto->getEpisodes())) {
-
             $character->getEpisodes()->clear();
             foreach ($episodes as $episodeId) {
                 $episode = $this->episodeRepository->find($episodeId);

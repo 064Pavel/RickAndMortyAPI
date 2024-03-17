@@ -4,28 +4,25 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\DTO\LocationDto;
-use App\Entity\Location;
+use App\DTO\DtoInterface;
+use App\Entity\EntityInterface;
 use App\Repository\LocationRepository;
+use App\Service\Factory\EntityFactoryInterface;
 use App\Tools\PaginatorInterface;
 use App\Tools\UrlGeneratorInterface;
-use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use ReflectionClass;
-use Symfony\Component\PropertyAccess\PropertyAccess;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-class LocationService
+class LocationService implements ServiceInterface
 {
-    private PropertyAccessorInterface $propertyAccessor;
-
     public function __construct(private LocationRepository $locationRepository,
-        private UrlGeneratorInterface $urlGenerator, private PaginatorInterface $paginator, private EntityManagerInterface $entityManager)
+        private UrlGeneratorInterface $urlGenerator,
+        private PaginatorInterface $paginator,
+        private EntityManagerInterface $entityManager,
+        private EntityFactoryInterface $entityFactory, )
     {
-        $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
     }
 
-    public function getLocations(int $page, int $limit, array $queries = []): array
+    public function getEntities(int $page, int $limit, array $queries = []): array
     {
         if (empty($queries)) {
             $locations = $this->locationRepository->findAll();
@@ -37,7 +34,7 @@ class LocationService
 
         $data = [];
         foreach ($locations as $location) {
-            $data[] = $this->formatLocationData($location);
+            $data[] = $this->formatEntityData($location);
         }
 
         $options = [
@@ -56,7 +53,7 @@ class LocationService
         ];
     }
 
-    public function getLocationByIds(string $ids): array
+    public function getEntitiesByIds(int $page, int $limit, string $ids): array
     {
         $locationIds = explode(',', $ids);
 
@@ -69,36 +66,47 @@ class LocationService
                 continue;
             }
 
-            $data[] = $this->formatLocationData($character);
+            $data[] = $this->formatEntityData($character);
         }
 
-        return $data;
+        $options = [
+            'page' => $page,
+            'entityName' => 'location',
+            'limit' => $limit,
+        ];
+
+        $count = count($data);
+
+        $data = $this->paginator->paginate($data, $options);
+        $info = $this->paginator->formatInfo($data, $count, $options);
+
+        return [
+            'info' => $info,
+            'results' => $data,
+        ];
     }
 
-    public function getLocation(int $locationId): ?array
+    public function getEntity(int $locationId): ?array
     {
         $location = $this->locationRepository->find($locationId);
         if (!$location) {
             return null;
         }
 
-        return $this->formatLocationData($location);
+        return $this->formatEntityData($location);
     }
 
-    public function createLocation(LocationDto $locationDto): array
+    public function createEntity(DtoInterface $dto): array
     {
-        $location = new Location();
-        $location->setName($locationDto->getName());
-        $location->setType($locationDto->getType());
-        $location->setDimension($locationDto->getDimension());
-        $location->setCreated(new DateTime());
+        $location = $this->entityFactory->createEntityFromDto($dto);
 
-        $this->locationRepository->save($location);
+        $this->entityManager->persist($location);
+        $this->entityManager->flush();
 
-        return $this->formatLocationData($location);
+        return $this->formatEntityData($location);
     }
 
-    public function updateLocation(int $id, LocationDto $locationDto): ?array
+    public function putUpdateEntity(int $id, DtoInterface $dto): ?array
     {
         $location = $this->locationRepository->find($id);
 
@@ -106,53 +114,31 @@ class LocationService
             return [];
         }
 
-        $location->setName($locationDto->getName());
-        $location->setType($locationDto->getType());
-        $location->setDimension($locationDto->getDimension());
+        $location = $this->entityFactory->putUpdateEntityFromDto($location, $dto);
 
-        $this->locationRepository->save($location);
+        $this->entityManager->persist($location);
+        $this->entityManager->flush();
 
-        return $this->formatLocationData($location);
+        return $this->formatEntityData($location);
     }
 
-    public function patchLocation(int $id, LocationDto $locationDto): array
+    public function patchUpdateEntity(int $id, DtoInterface $dto): array
     {
-        $location = $this->entityManager->getRepository(Location::class)->find($id);
+        $location = $this->locationRepository->find($id);
 
         if (!$location) {
             return [];
         }
 
-        $location = $this->updateLocationFields($location, $locationDto);
+        $location = $this->entityFactory->patchUpdateEntityFromDto($location, $dto);
 
-        $this->locationRepository->save($location);
+        $this->entityManager->persist($location);
+        $this->entityManager->flush();
 
-        return $this->formatLocationData($location);
+        return $this->formatEntityData($location);
     }
 
-    private function updateLocationFields(Location $location, LocationDto $locationDto): Location
-    {
-        $reflectionClass = new ReflectionClass($locationDto);
-        $properties = $reflectionClass->getProperties();
-
-        foreach ($properties as $property) {
-            $propertyName = $property->getName();
-            $getterMethod = 'get' . ucfirst($propertyName);
-            $setterMethod = 'set' . ucfirst($propertyName);
-
-            if (method_exists($locationDto, $getterMethod) && method_exists($location, $setterMethod)) {
-                $value = $locationDto->$getterMethod();
-
-                if (null !== $value) {
-                    $location->$setterMethod($value);
-                }
-            }
-        }
-
-        return $location;
-    }
-
-    public function deleteLocation(int $id): bool
+    public function deleteEntity(int $id): bool
     {
         $location = $this->locationRepository->find($id);
 
@@ -160,24 +146,25 @@ class LocationService
             return false;
         }
 
-        $this->locationRepository->remove($location);
+        $this->entityManager->remove($location);
+        $this->entityManager->flush();
 
         return true;
     }
 
-    private function formatLocationData(Location $location): array
+    private function formatEntityData(EntityInterface $entity): array
     {
-        $characters = $location->getCharactersLocation()->toArray();
+        $characters = $entity->getCharactersLocation()->toArray();
         $charactersUrls = $this->urlGenerator->generateUrls($characters, 'character');
 
         return [
-            'id' => $location->getId(),
-            'name' => $location->getName(),
-            'type' => $location->getType(),
-            'dimension' => $location->getDimension(),
+            'id' => $entity->getId(),
+            'name' => $entity->getName(),
+            'type' => $entity->getType(),
+            'dimension' => $entity->getDimension(),
             'residents' => $charactersUrls,
-            'url' => $this->urlGenerator->getCurrentUrl($location->getId(), 'location'),
-            'created' => $location->getCreated(),
+            'url' => $this->urlGenerator->getCurrentUrl($entity->getId(), 'entity'),
+            'created' => $entity->getCreated(),
         ];
     }
 }

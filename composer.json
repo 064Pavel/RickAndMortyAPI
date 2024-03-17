@@ -5,6 +5,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.2",
+        "ext-cassandra": "*",
         "ext-ctype": "*",
         "ext-http": "*",
         "ext-iconv": "*",
@@ -24,8 +25,7 @@
         "symfony/runtime": "7.0.*",
         "symfony/serializer": "7.0.*",
         "symfony/validator": "7.0.*",
-        "symfony/yaml": "7.0.*",
-      "ext-cassandra": "*"
+        "symfony/yaml": "7.0.*"
     },
     "config": {
         "allow-plugins": {

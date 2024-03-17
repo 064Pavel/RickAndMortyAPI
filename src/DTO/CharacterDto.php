@@ -48,6 +48,10 @@ class CharacterDto
         max: 255,
         maxMessage: 'Gender cannot be longer than {{ limit }} characters',
     )]
+    #[Assert\Choice(
+        choices: ['Male', 'Female', 'unknown', 'Other'],
+        message: 'Choose a valid gender',
+    )]
     private ?string $gender;
 
     #[Assert\NotBlank(message: 'Origin cannot be blank')]

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
+use App\Validator\Constraints\UniqueName;
 use Symfony\Component\Serializer\Attribute\SerializedName;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class LocationDto
+class LocationDto implements DtoInterface
 {
     #[SerializedName('name')]
     #[Assert\NotBlank]
@@ -39,14 +40,17 @@ class LocationDto
         maxMessage: 'Your dimension cannot be longer than {{ limit }} characters',
     )]
     private ?string $dimension = null;
+
+    public function __construct(?string $name, ?string $type, ?string $dimension)
+    {
+        $this->name = $name;
+        $this->type = $type;
+        $this->dimension = $dimension;
+    }
+
     public function getName(): ?string
     {
         return $this->name;
-    }
-
-    public function setName(?string $name): void
-    {
-        $this->name = $name;
     }
 
     public function getType(): ?string
@@ -54,18 +58,8 @@ class LocationDto
         return $this->type;
     }
 
-    public function setType(?string $type): void
-    {
-        $this->type = $type;
-    }
-
     public function getDimension(): ?string
     {
         return $this->dimension;
-    }
-
-    public function setDimension(?string $dimension): void
-    {
-        $this->dimension = $dimension;
     }
 }

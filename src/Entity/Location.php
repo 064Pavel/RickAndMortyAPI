@@ -12,7 +12,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LocationRepository::class)]
-class Location
+class Location implements EntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]

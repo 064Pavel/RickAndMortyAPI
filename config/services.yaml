@@ -6,6 +6,15 @@
 parameters:
 
 services:
+
+    App\Listener\ValidationExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
+    App\Resolver\RequestDtoArgumentResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 100 }
+
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.

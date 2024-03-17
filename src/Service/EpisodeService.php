@@ -155,6 +155,7 @@ class EpisodeService
 
         return $episode;
     }
+
     public function deleteEpisode(int $episodeId): bool
     {
         $episode = $this->episodeRepository->find($episodeId);
@@ -184,6 +185,4 @@ class EpisodeService
             'created' => $episode->getCreated(),
         ];
     }
-
-
 }

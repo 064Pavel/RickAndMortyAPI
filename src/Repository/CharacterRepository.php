@@ -17,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Character[]    findAll()
  * @method Character[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class CharacterRepository extends ServiceEntityRepository
+class CharacterRepository extends ServiceEntityRepository implements EntityRepositoryInterface
 {
     private EntityManagerInterface $entityManager;
 

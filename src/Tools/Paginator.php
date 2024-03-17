@@ -35,7 +35,6 @@ class Paginator implements PaginatorInterface
         ];
     }
 
-
     private function getUrl(int $page, string $entityName, array $queryParameters = []): string
     {
         $url = $_ENV['API_ROUTE'];
@@ -47,5 +46,4 @@ class Paginator implements PaginatorInterface
 
         return $url;
     }
-
 }

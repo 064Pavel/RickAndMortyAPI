@@ -6,173 +6,136 @@ namespace App\Controller;
 
 use App\DTO\EpisodeDto;
 use App\Service\EpisodeService;
-use App\Tools\DataConverterInterface;
+use App\Service\PaginationService;
 use App\Tools\QueryFilterInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class EpisodeController extends AbstractController
 {
-    private EpisodeService $episodeService;
-    private SerializerInterface $serializer;
-    private ValidatorInterface $validator;
-
-    private QueryFilterInterface $queryFilter;
-
-    public function __construct(EpisodeService $episodeService,
-        SerializerInterface $serializer,
-        ValidatorInterface $validator,
-        QueryFilterInterface $queryFilter, private DataConverterInterface $dataConverter)
+    public function __construct(private EpisodeService $episodeService,
+        private QueryFilterInterface $queryFilter,
+        private PaginationService $paginationService, )
     {
-        $this->episodeService = $episodeService;
-        $this->serializer = $serializer;
-        $this->validator = $validator;
-        $this->queryFilter = $queryFilter;
     }
 
     #[Route('/api/episode', name: 'all.episode', methods: ['GET'])]
     public function getAllEpisode(Request $request): JsonResponse
     {
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('limit', 10);
+        try {
+            [$page, $limit] = $this->paginationService->getPageAndLimit($request);
 
-        $allowedFilters = ['name', 'episode'];
+            $allowedFilters = ['name', 'episode'];
 
-        $queries = $this->queryFilter->filter($request, $allowedFilters);
+            $queries = $this->queryFilter->filter($request, $allowedFilters);
 
-        $data = $this->episodeService->getEpisodes($page, $limit, $queries);
+            $data = $this->episodeService->getEntities($page, $limit, $queries);
 
-        if (empty($data)) {
-            return $this->json(['message' => 'no data available']);
+            if (empty($data)) {
+                return $this->json(['message' => 'no data available']);
+            }
+
+            return $this->json($data);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while fetching episodes'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return $this->json($data, Response::HTTP_OK);
     }
 
-    #[Route('/api/episodes/{ids}', name: 'all.episode.by.ids', methods: 'GET')]
-    public function getAllEpisodeByIds(string $ids): JsonResponse
+    #[Route('/api/episodes/{ids}', name: 'episode.by.ids', methods: 'GET')]
+    public function getAllEpisodeByIds(string $ids, Request $request): JsonResponse
     {
-        $data = $this->episodeService->getEpisodesByIds($ids);
+        try {
+            [$page, $limit] = $this->paginationService->getPageAndLimit($request);
 
-        if (empty($data)) {
-            return $this->json(['message' => 'nothing could be found on the request']);
+            $data = $this->episodeService->getEntitiesByIds($page, $limit, $ids);
+
+            if (empty($data)) {
+                return $this->json(['message' => 'nothing could be found on the request']);
+            }
+
+            return $this->json($data);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while fetching episodes by ids'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return $this->json($data);
     }
 
-    #[Route('/api/episode/{id}', name: 'get.episode', methods: 'GET')]
+    #[Route('/api/episode/{id}', name: 'get.episode', requirements: ['id' => '\d+'], methods: 'GET')]
     public function getEpisode(int $id): JsonResponse
     {
-        $data = $this->episodeService->getEpisode($id);
+        try {
+            $data = $this->episodeService->getEntity($id);
 
-        if (empty($data)) {
-            return $this->json(['message' => 'nothing could be found on the request']);
-        }
-
-        return $this->json(['result' => $data], Response::HTTP_OK);
-    }
-
-    #[Route('/api/episode', name: 'create.episode', methods: ['POST'])]
-    public function createEpisode(Request $request): JsonResponse
-    {
-        $episodeDto = $this->processEpisodeDtoRequest($request);
-
-        $errors = $this->validator->validate($episodeDto);
-        if (count($errors) > 0) {
-            $errorsArray = [];
-            foreach ($errors as $error) {
-                $errorsArray[$error->getPropertyPath()] = $error->getMessage();
+            if (empty($data)) {
+                return $this->json(['message' => 'nothing could be found on the request']);
             }
 
-            return $this->json(['errors' => $errorsArray], Response::HTTP_BAD_REQUEST);
+            return $this->json(['result' => $data]);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while fetching episode'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = $this->episodeService->createEpisode($episodeDto);
-
-        return $this->json(['result' => $data], Response::HTTP_CREATED);
     }
 
-    #[Route('/api/episode/{id}', name: 'update.episode', methods: ['PUT'])]
-    public function updateEpisode(int $id, Request $request): JsonResponse
+    #[Route('/api/episode', name: 'create.episode', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function createEpisode(EpisodeDto $episodeDto): JsonResponse
     {
-        $episodeDto = $this->processEpisodeDtoRequest($request);
+        try {
+            $data = $this->episodeService->createEntity($episodeDto);
 
-        $errors = $this->validator->validate($episodeDto);
-        if (count($errors) > 0) {
-            $errorsArray = [];
-            foreach ($errors as $error) {
-                $errorsArray[$error->getPropertyPath()] = $error->getMessage();
+            return $this->json(['result' => $data], Response::HTTP_CREATED);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while creating the episode'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/episode/{id}', name: 'put.update.episode', requirements: ['id' => '\d+'], methods: ['PUT'])]
+    public function putUpdateEpisode(int $id, EpisodeDto $episodeDto): JsonResponse
+    {
+        try {
+            $data = $this->episodeService->putUpdateEntity($id, $episodeDto);
+
+            if (empty($data)) {
+                return $this->json(['message' => 'there is no such entity']);
             }
 
-            return $this->json(['errors' => $errorsArray], Response::HTTP_BAD_REQUEST);
+            return $this->json(['result' => $data]);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while updating the episode'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = $this->episodeService->updateEpisode($id, $episodeDto);
-
-        return $this->json(['result' => $data], Response::HTTP_OK);
     }
 
-    #[Route('/api/episode/{id}', name: 'patch.episode', methods: ['PATCH'])]
-    public function patchEpisode(int $id, Request $request): JsonResponse
+    #[Route('/api/episode/{id}', name: 'patch.update.episode', requirements: ['id' => '\d+'], methods: ['PATCH'])]
+    public function patchUpdateEpisode(int $id, EpisodeDto $episodeDto): JsonResponse
     {
-        $episodeDto = $this->processEpisodeDtoRequest($request);
+        try {
+            $data = $this->episodeService->patchUpdateEntity($id, $episodeDto);
 
-        $errors = $this->validator->validate($episodeDto, null, ['patch']);
-        if (count($errors) > 0) {
-            $errorsArray = [];
-            foreach ($errors as $error) {
-                $errorsArray[$error->getPropertyPath()] = $error->getMessage();
+            if (empty($data)) {
+                return $this->json(['message' => 'there is no such entity']);
             }
 
-            return $this->json(['errors' => $errorsArray], Response::HTTP_BAD_REQUEST);
+            return $this->json(['result' => $data]);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while updating the episode'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = $this->episodeService->patchLocation($id, $episodeDto);
-
-        if (empty($data)) {
-            return $this->json(['message' => 'there is no such entity']);
-        }
-
-        return $this->json(['result' => $data]);
     }
 
-    #[Route('/api/episode/{id}', name: 'delete.episode', methods: 'DELETE')]
+    #[Route('/api/episode/{id}', name: 'delete.episode', requirements: ['id' => '\d+'], methods: 'DELETE')]
     public function deleteEpisode(int $id): JsonResponse
     {
-        $isDelete = $this->episodeService->deleteEpisode($id);
+        try {
+            $isDelete = $this->episodeService->deleteEntity($id);
 
-        if (!$isDelete) {
-            return $this->json(['message' => 'failure', Response::HTTP_BAD_REQUEST]);
+            if (!$isDelete) {
+                return $this->json(['message' => 'failure', Response::HTTP_BAD_REQUEST]);
+            }
+
+            return $this->json(['message' => 'Episode successfully deleted'], Response::HTTP_NO_CONTENT);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while deleting the episode'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return $this->json(['message' => 'success']);
-    }
-
-    private function processEpisodeDtoRequest(Request $request): EpisodeDto
-    {
-        $convertFields = ['name', 'air_date', 'episode'];
-
-        $jsonData = $this->dataConvert($request, $convertFields);
-
-        return $this->serializer->deserialize($jsonData, EpisodeDto::class, 'json');
-    }
-
-    private function dataConvert(Request $request, array $fieldsToConvert): string
-    {
-        $requestData = json_decode($request->getContent(), true);
-
-        if (null === $requestData) {
-            return '';
-        }
-
-        $this->dataConverter->convertToString($requestData, $fieldsToConvert);
-
-        return json_encode($requestData);
     }
 }

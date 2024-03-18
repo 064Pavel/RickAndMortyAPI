@@ -13,7 +13,7 @@ interface ServiceInterface
 
     public function getEntitiesByIds(int $page, int $limit, string $ids): array;
 
-    public function getEntity(int $locationId): ?array;
+    public function getEntity(int $id): ?array;
 
     public function createEntity(DtoInterface $dto): array;
 

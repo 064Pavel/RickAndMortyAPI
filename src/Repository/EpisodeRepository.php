@@ -27,12 +27,6 @@ class EpisodeRepository extends ServiceEntityRepository implements EntityReposit
         parent::__construct($registry, Episode::class);
     }
 
-    public function save(Episode $episode): void
-    {
-        $this->entityManager->persist($episode);
-        $this->entityManager->flush();
-    }
-
     public function findByFilters(array $filters): array
     {
         $qb = $this->createQueryBuilder('e');
@@ -43,12 +37,6 @@ class EpisodeRepository extends ServiceEntityRepository implements EntityReposit
         }
 
         return $qb->getQuery()->getResult();
-    }
-
-    public function remove(Episode $episode): void
-    {
-        $this->entityManager->remove($episode);
-        $this->entityManager->flush();
     }
 
     public function getTotalEntityCount(): int

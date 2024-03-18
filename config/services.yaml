@@ -15,6 +15,9 @@ services:
         tags:
             - { name: controller.argument_value_resolver, priority: 100 }
 
+    App\Service\Factory\EntityFactory:
+        class: App\Service\Factory\EpisodeFactory
+
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.

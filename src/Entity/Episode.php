@@ -13,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: EpisodeRepository::class)]
-class Episode
+class Episode implements EntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]

@@ -59,7 +59,7 @@ class LocationController extends AbstractController
 
             return $this->json($data);
         } catch (Exception $e) {
-            return $this->json(['message' => 'An error occurred while fetching locations'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->json(['message' => 'An error occurred while fetching locations by ids'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -75,7 +75,7 @@ class LocationController extends AbstractController
 
             return $this->json(['result' => $data]);
         } catch (Exception $e) {
-            return $this->json(['message' => 'An error occurred while fetching locations'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->json(['message' => 'An error occurred while fetching location'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -91,7 +91,7 @@ class LocationController extends AbstractController
         }
     }
 
-    #[Route('/api/location/{id}', name: 'update.location', requirements: ['id' => '\d+'], methods: ['PUT'])]
+    #[Route('/api/location/{id}', name: 'put.update.location', requirements: ['id' => '\d+'], methods: ['PUT'])]
     public function putUpdateLocation(int $id, LocationDto $locationDto): JsonResponse
     {
         try {
@@ -107,7 +107,7 @@ class LocationController extends AbstractController
         }
     }
 
-    #[Route('/api/location/{id}', name: 'patch.location', requirements: ['id' => '\d+'], methods: ['PATCH'])]
+    #[Route('/api/location/{id}', name: 'patch.update.location', requirements: ['id' => '\d+'], methods: ['PATCH'])]
     public function patchUpdateLocation(int $id, LocationDto $locationDto): JsonResponse
     {
         try {

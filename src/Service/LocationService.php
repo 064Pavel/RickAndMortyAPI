@@ -7,7 +7,7 @@ namespace App\Service;
 use App\DTO\DtoInterface;
 use App\Entity\EntityInterface;
 use App\Repository\LocationRepository;
-use App\Service\Factory\EntityFactoryInterface;
+use App\Service\Factory\EntityFactory;
 use App\Tools\PaginatorInterface;
 use App\Tools\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,7 +18,7 @@ class LocationService implements ServiceInterface
         private UrlGeneratorInterface $urlGenerator,
         private PaginatorInterface $paginator,
         private EntityManagerInterface $entityManager,
-        private EntityFactoryInterface $entityFactory, )
+        private EntityFactory $entityFactory, )
     {
     }
 
@@ -86,9 +86,9 @@ class LocationService implements ServiceInterface
         ];
     }
 
-    public function getEntity(int $locationId): ?array
+    public function getEntity(int $id): ?array
     {
-        $location = $this->locationRepository->find($locationId);
+        $location = $this->locationRepository->find($id);
         if (!$location) {
             return null;
         }

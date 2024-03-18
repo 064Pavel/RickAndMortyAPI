@@ -8,10 +8,8 @@ use App\DTO\DtoInterface;
 use App\Entity\EntityInterface;
 use App\Entity\Location;
 use DateTimeImmutable;
-use ReflectionClass;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class LocationFactory implements EntityFactoryInterface
+class LocationFactory extends EntityFactory
 {
     public function createEntityFromDto(DtoInterface $dto): EntityInterface
     {
@@ -29,24 +27,6 @@ class LocationFactory implements EntityFactoryInterface
         $entity->setName($dto->getName());
         $entity->setType($dto->getType());
         $entity->setDimension($dto->getDimension());
-
-        return $entity;
-    }
-
-    public function patchUpdateEntityFromDto(EntityInterface $entity, DtoInterface $dto): EntityInterface
-    {
-        $propertyAccessor = PropertyAccess::createPropertyAccessor();
-        $reflectionClass = new ReflectionClass($dto);
-        $properties = $reflectionClass->getProperties();
-
-        foreach ($properties as $property) {
-            $propertyName = $property->getName();
-            $value = $propertyAccessor->getValue($dto, $propertyName);
-
-            if (null !== $value) {
-                $propertyAccessor->setValue($entity, $propertyName, $value);
-            }
-        }
 
         return $entity;
     }

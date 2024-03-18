@@ -6,7 +6,7 @@ namespace App\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class EpisodeDto
+class EpisodeDto implements DtoInterface
 {
     #[Assert\NotBlank]
     #[Assert\Type('string')]

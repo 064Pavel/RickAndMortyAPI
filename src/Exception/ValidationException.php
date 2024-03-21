@@ -26,6 +26,4 @@ class ValidationException extends Exception
     {
         return $this->validationErrors;
     }
-
-
 }

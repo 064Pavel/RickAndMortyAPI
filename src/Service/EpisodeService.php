@@ -7,7 +7,7 @@ namespace App\Service;
 use App\DTO\DtoInterface;
 use App\Entity\Episode;
 use App\Repository\EpisodeRepository;
-use App\Service\Factory\EntityFactory;
+use App\Service\Factory\EpisodeFactory;
 use App\Tools\PaginatorInterface;
 use App\Tools\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,7 +18,7 @@ class EpisodeService implements ServiceInterface
         private EntityManagerInterface $entityManager,
         private UrlGeneratorInterface $urlGenerator,
         private PaginatorInterface $paginator,
-        private EntityFactory $entityFactory, )
+        private EpisodeFactory $episodeFactory, )
     {
     }
 
@@ -85,7 +85,7 @@ class EpisodeService implements ServiceInterface
 
     public function createEntity(DtoInterface $dto): array
     {
-        $episode = $this->entityFactory->createEntityFromDto($dto);
+        $episode = $this->episodeFactory->createEntityFromDto($dto);
 
         $this->entityManager->persist($episode);
         $this->entityManager->flush();
@@ -101,7 +101,7 @@ class EpisodeService implements ServiceInterface
             return [];
         }
 
-        $episode = $this->entityFactory->putUpdateEntityFromDto($episode, $dto);
+        $episode = $this->episodeFactory->putUpdateEntityFromDto($episode, $dto);
 
         $this->entityManager->persist($episode);
         $this->entityManager->flush();
@@ -117,7 +117,7 @@ class EpisodeService implements ServiceInterface
             return [];
         }
 
-        $episode = $this->entityFactory->patchUpdateEntityFromDto($episode, $dto);
+        $episode = $this->episodeFactory->patchUpdateEntityFromDto($episode, $dto);
 
         $this->entityManager->persist($episode);
         $this->entityManager->flush();

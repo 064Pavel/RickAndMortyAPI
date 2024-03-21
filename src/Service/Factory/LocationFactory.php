@@ -9,7 +9,7 @@ use App\Entity\EntityInterface;
 use App\Entity\Location;
 use DateTimeImmutable;
 
-class LocationFactory extends EntityFactory
+class LocationFactory implements EntityFactoryInterface
 {
     public function createEntityFromDto(DtoInterface $dto): EntityInterface
     {
@@ -27,6 +27,23 @@ class LocationFactory extends EntityFactory
         $entity->setName($dto->getName());
         $entity->setType($dto->getType());
         $entity->setDimension($dto->getDimension());
+
+        return $entity;
+    }
+
+    public function patchUpdateEntityFromDto(EntityInterface $entity, DtoInterface $dto): EntityInterface
+    {
+        if (null !== $dto->getName()) {
+            $entity->setName($dto->getName());
+        }
+
+        if (null !== $dto->getType()) {
+            $entity->setType($dto->getType());
+        }
+
+        if (null !== $dto->getDimension()) {
+            $entity->setDimension($dto->getDimension());
+        }
 
         return $entity;
     }

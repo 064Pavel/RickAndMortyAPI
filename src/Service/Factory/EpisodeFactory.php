@@ -9,7 +9,7 @@ use App\Entity\EntityInterface;
 use App\Entity\Episode;
 use DateTimeImmutable;
 
-class EpisodeFactory extends EntityFactory
+class EpisodeFactory implements EntityFactoryInterface
 {
     public function createEntityFromDto(DtoInterface $dto): EntityInterface
     {
@@ -29,6 +29,27 @@ class EpisodeFactory extends EntityFactory
         $entity->setEpisode($dto->getEpisode());
         $entity->setAirDate($dto->getAirDate());
         $entity->setViews($dto->getViews());
+
+        return $entity;
+    }
+
+    public function patchUpdateEntityFromDto(EntityInterface $entity, DtoInterface $dto): EntityInterface
+    {
+        if (null !== $dto->getName()) {
+            $entity->setName($dto->getName());
+        }
+
+        if (null !== $dto->getEpisode()) {
+            $entity->setEpisode($dto->getEpisode());
+        }
+
+        if (null !== $dto->getAirDate()) {
+            $entity->setAirDate($dto->getAirDate());
+        }
+
+        if (null !== $dto->getViews()) {
+            $entity->setViews($dto->getViews());
+        }
 
         return $entity;
     }

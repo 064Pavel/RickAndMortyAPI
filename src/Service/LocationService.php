@@ -7,7 +7,7 @@ namespace App\Service;
 use App\DTO\DtoInterface;
 use App\Entity\EntityInterface;
 use App\Repository\LocationRepository;
-use App\Service\Factory\EntityFactory;
+use App\Service\Factory\LocationFactory;
 use App\Tools\PaginatorInterface;
 use App\Tools\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,7 +18,7 @@ class LocationService implements ServiceInterface
         private UrlGeneratorInterface $urlGenerator,
         private PaginatorInterface $paginator,
         private EntityManagerInterface $entityManager,
-        private EntityFactory $entityFactory, )
+        private LocationFactory $locationFactory, )
     {
     }
 
@@ -98,7 +98,7 @@ class LocationService implements ServiceInterface
 
     public function createEntity(DtoInterface $dto): array
     {
-        $location = $this->entityFactory->createEntityFromDto($dto);
+        $location = $this->locationFactory->createEntityFromDto($dto);
 
         $this->entityManager->persist($location);
         $this->entityManager->flush();
@@ -114,7 +114,7 @@ class LocationService implements ServiceInterface
             return [];
         }
 
-        $location = $this->entityFactory->putUpdateEntityFromDto($location, $dto);
+        $location = $this->locationFactory->putUpdateEntityFromDto($location, $dto);
 
         $this->entityManager->persist($location);
         $this->entityManager->flush();
@@ -130,7 +130,7 @@ class LocationService implements ServiceInterface
             return [];
         }
 
-        $location = $this->entityFactory->patchUpdateEntityFromDto($location, $dto);
+        $location = $this->locationFactory->patchUpdateEntityFromDto($location, $dto);
 
         $this->entityManager->persist($location);
         $this->entityManager->flush();

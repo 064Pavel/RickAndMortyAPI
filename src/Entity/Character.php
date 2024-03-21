@@ -13,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CharacterRepository::class)]
-class Character
+class Character implements EntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -192,6 +192,16 @@ class Character
     {
         if ($this->episodes->removeElement($episode)) {
             $episode->removeCharacter($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAllEpisodes(): static
+    {
+        $episodes = $this->getEpisodes();
+        foreach ($episodes as $episode) {
+            $this->removeEpisode($episode);
         }
 
         return $this;

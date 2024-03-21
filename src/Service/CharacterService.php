@@ -4,40 +4,25 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\DTO\CharacterDto;
+use App\DTO\DtoInterface;
 use App\Entity\Character;
 use App\Repository\CharacterRepository;
-use App\Repository\EpisodeRepository;
-use App\Repository\LocationRepository;
+use App\Service\Factory\CharacterFactory;
 use App\Tools\PaginatorInterface;
 use App\Tools\UrlGeneratorInterface;
-use DateTime;
-use Symfony\Component\Serializer\SerializerInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
-class CharacterService
+class CharacterService implements ServiceInterface
 {
-    private CharacterRepository $characterRepository;
-    private LocationRepository $locationRepository;
-    private EpisodeRepository $episodeRepository;
-    private UrlGeneratorInterface $urlGenerator;
-    private SerializerInterface $serializer;
-    private PaginatorInterface $paginator;
-
-    public function __construct(CharacterRepository $characterRepository,
-        UrlGeneratorInterface $urlGenerator,
-        LocationRepository $locationRepository,
-        EpisodeRepository $episodeRepository,
-        SerializerInterface $serializer, PaginatorInterface $paginator)
+    public function __construct(private CharacterRepository $characterRepository,
+        private UrlGeneratorInterface $urlGenerator,
+        private PaginatorInterface $paginator,
+        private CharacterFactory $characterFactory,
+        private EntityManagerInterface $entityManager, )
     {
-        $this->characterRepository = $characterRepository;
-        $this->urlGenerator = $urlGenerator;
-        $this->locationRepository = $locationRepository;
-        $this->episodeRepository = $episodeRepository;
-        $this->serializer = $serializer;
-        $this->paginator = $paginator;
     }
 
-    public function getCharacters(int $page, int $limit, array $queries): array
+    public function getEntities(int $page, int $limit, array $queries = []): array
     {
         if (empty($queries)) {
             $characters = $this->characterRepository->findAll();
@@ -69,7 +54,7 @@ class CharacterService
         ];
     }
 
-    public function getCharactersByIds(string $ids): array
+    public function getEntitiesByIds(int $page, int $limit, string $ids): array
     {
         $characterIds = explode(',', $ids);
 
@@ -88,7 +73,7 @@ class CharacterService
         return $data;
     }
 
-    public function getCharacter(int $id): ?array
+    public function getEntity(int $id): ?array
     {
         $character = $this->characterRepository->find($id);
 
@@ -99,87 +84,49 @@ class CharacterService
         return $this->formatCharacterData($character);
     }
 
-    public function createCharacter(CharacterDto $characterDto, array $serializationContext = []): ?array
+    public function createEntity(DtoInterface $dto): array
     {
-        return $this->processCharacterData($characterDto, null, $serializationContext);
-    }
+        $character = $this->characterFactory->createEntityFromDto($dto);
 
-    public function updateCharacter(int $id, CharacterDto $characterDto, array $serializationContext = []): ?array
-    {
-        $character = $this->characterRepository->find($id);
-
-        if (!$character) {
-            return null;
-        }
-
-        return $this->processCharacterData($characterDto, $character, $serializationContext);
-    }
-
-    public function patchCharacter(int $id, CharacterDto $characterDto): ?array
-    {
-        $character = $this->characterRepository->find($id);
-
-        if (!$character) {
-            return null;
-        }
-
-        if ($name = $characterDto->getName()) {
-            $character->setName($name);
-        }
-        if ($status = $characterDto->getStatus()) {
-            $character->setStatus($status);
-        }
-        if ($species = $characterDto->getSpecies()) {
-            $character->setSpecies($species);
-        }
-        if ($type = $characterDto->getType()) {
-            $character->setType($type);
-        }
-        if ($gender = $characterDto->getGender()) {
-            $character->setGender($gender);
-        }
-        if ($image = $characterDto->getImage()) {
-            $character->setImage($image);
-        }
-
-        $locationDto = $characterDto->getLocation();
-        if (null !== $locationDto) {
-            $locationId = $locationDto->getId();
-            if (null !== $locationId) {
-                $location = $this->locationRepository->find($locationId);
-                if ($location) {
-                    $character->setLocation($location);
-                }
-            }
-        }
-
-        $originDto = $characterDto->getOrigin();
-        if (null !== $originDto) {
-            $originId = $originDto->getId();
-            if (null !== $originId) {
-                $origin = $this->locationRepository->find($originId);
-                if ($origin) {
-                    $character->setOrigin($origin);
-                }
-            }
-        }
-
-        if (!empty($episodes = $characterDto->getEpisodes())) {
-            $character->getEpisodes()->clear();
-            foreach ($episodes as $episodeId) {
-                $episode = $this->episodeRepository->find($episodeId);
-                if ($episode) {
-                    $character->addEpisode($episode);
-                }
-            }
-        }
-
-        $this->characterRepository->save($character);
+        $this->entityManager->persist($character);
+        $this->entityManager->flush();
 
         return $this->formatCharacterData($character);
     }
 
-    public function deleteCharacter(int $id): bool
+    public function putUpdateEntity(int $id, DtoInterface $dto): ?array
+    {
+        $character = $this->characterRepository->find($id);
+
+        if (!$character) {
+            return null;
+        }
+
+        $character = $this->characterFactory->putUpdateEntityFromDto($character, $dto);
+
+        $this->entityManager->persist($character);
+        $this->entityManager->flush();
+
+        return $this->formatCharacterData($character);
+    }
+
+    public function patchUpdateEntity(int $id, DtoInterface $dto): ?array
+    {
+        $character = $this->characterRepository->find($id);
+
+        if (!$character) {
+            return null;
+        }
+
+        $character = $this->characterFactory->patchUpdateEntityFromDto($character, $dto);
+
+        $this->entityManager->persist($character);
+        $this->entityManager->flush();
+
+        return $this->formatCharacterData($character);
+    }
+
+    public function deleteEntity(int $id): bool
     {
         $character = $this->characterRepository->find($id);
 
@@ -187,7 +134,8 @@ class CharacterService
             return false;
         }
 
-        $this->characterRepository->remove($character);
+        $this->entityManager->remove($character);
+        $this->entityManager->flush();
 
         return true;
     }
@@ -223,50 +171,5 @@ class CharacterService
             'url' => $this->urlGenerator->getCurrentUrl($character->getId(), 'character'),
             'created' => $character->getCreated(),
         ];
-    }
-
-    private function processCharacterData(CharacterDto $characterDto, ?Character $character = null, array $serializationContext = []): ?array
-    {
-        if (!$character) {
-            $character = new Character();
-        }
-
-        $character->setName($characterDto->getName());
-        $character->setStatus($characterDto->getStatus());
-        $character->setSpecies($characterDto->getSpecies());
-        $character->setType($characterDto->getType());
-        $character->setGender($characterDto->getGender());
-        $character->setImage($characterDto->getImage());
-
-        $originId = $characterDto->getOrigin()->getId();
-        $locationId = $characterDto->getLocation()->getId();
-
-        $origin = $this->locationRepository->find($originId);
-        $location = $this->locationRepository->find($locationId);
-
-        $character->setOrigin($origin);
-        $character->setLocation($location);
-
-        if (!empty($characterDto->getEpisodes())) {
-            foreach ($characterDto->getEpisodes() as $episodeId) {
-                $episode = $this->episodeRepository->find($episodeId);
-                if ($episode) {
-                    $character->addEpisode($episode);
-                }
-            }
-        }
-
-        $character->setCreated(new DateTime());
-
-        $this->characterRepository->save($character);
-
-        return $this->serializeCharacter($character, $serializationContext);
-    }
-
-    private function serializeCharacter(Character $character, array $serializationContext = []): array
-    {
-        $serializedCharacter = $this->serializer->serialize($character, 'json', $serializationContext);
-
-        return json_decode($serializedCharacter, true);
     }
 }

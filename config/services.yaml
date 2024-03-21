@@ -15,8 +15,21 @@ services:
         tags:
             - { name: controller.argument_value_resolver, priority: 100 }
 
-    App\Service\Factory\EntityFactory:
-        class: App\Service\Factory\EpisodeFactory
+    App\Service\Factory\CharacterFactory:
+        tags: ['entity_factory']
+
+    App\Service\Factory\EpisodeFactory:
+        tags: ['entity_factory']
+
+    App\Service\Factory\LocationFactory:
+        tags: ['entity_factory']
+
+    App\Service\Factory\EntityFactoryInterface:
+        class: App\Service\Factory\EntityFactoryInterface
+        arguments:
+            - !tagged_iterator entity_factory
+#    App\Service\Factory\EntityFactory:
+#        class: App\Service\Factory\CharacterFactory
 
     # default configuration for services in *this* file
     _defaults:

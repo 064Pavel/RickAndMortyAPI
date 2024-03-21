@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Resolver;
 
+use App\DTO\DtoInterface;
 use App\Exception\ValidationException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
@@ -20,7 +21,9 @@ class RequestDtoArgumentResolver implements ValueResolverInterface
 
     public function supports(Request $request, ArgumentMetadata $argument): bool
     {
-        return false !== strpos($argument->getType(), 'RequestDto');
+        $dtoType = $argument->getType();
+
+        return is_a($dtoType, DtoInterface::class, true);
     }
 
     /**
@@ -53,6 +56,7 @@ class RequestDtoArgumentResolver implements ValueResolverInterface
         return [$model];
     }
 
+    // Правильное ли решение?
     private function isPatch(Request $request): bool
     {
         return $request->isMethod('PATCH');

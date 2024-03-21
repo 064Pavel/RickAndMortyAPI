@@ -27,12 +27,6 @@ class CharacterRepository extends ServiceEntityRepository implements EntityRepos
         parent::__construct($registry, Character::class);
     }
 
-    public function save(Character $character): void
-    {
-        $this->entityManager->persist($character);
-        $this->entityManager->flush();
-    }
-
     public function findByFilters(array $filters): array
     {
         $qb = $this->createQueryBuilder('c');
@@ -43,12 +37,6 @@ class CharacterRepository extends ServiceEntityRepository implements EntityRepos
         }
 
         return $qb->getQuery()->getResult();
-    }
-
-    public function remove(Character $character): void
-    {
-        $this->entityManager->remove($character);
-        $this->entityManager->flush();
     }
 
     public function getTotalEntityCount(): int

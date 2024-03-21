@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\DTO\DtoInterface;
-use App\Entity\EntityInterface;
 
 interface ServiceInterface
 {
@@ -19,7 +18,7 @@ interface ServiceInterface
 
     public function putUpdateEntity(int $id, DtoInterface $dto): ?array;
 
-    public function patchUpdateEntity(int $id, DtoInterface $dto): array;
+    public function patchUpdateEntity(int $id, DtoInterface $dto): ?array;
 
     public function deleteEntity(int $id): bool;
 }

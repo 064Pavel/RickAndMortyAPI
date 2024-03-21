@@ -5,6 +5,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.2",
+        "ext-cassandra": "*",
         "ext-ctype": "*",
         "ext-http": "*",
         "ext-iconv": "*",

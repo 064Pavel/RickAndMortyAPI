@@ -10,9 +10,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: LocationRepository::class)]
-class Location
+class Location implements EntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -32,9 +33,11 @@ class Location
     private ?DateTimeInterface $created = null;
 
     #[ORM\OneToMany(targetEntity: Character::class, mappedBy: 'origin')]
+    #[Groups(['location'])]
     private Collection $charactersOrigin;
 
     #[ORM\OneToMany(targetEntity: Character::class, mappedBy: 'location')]
+    #[Groups(['location'])]
     private Collection $charactersLocation;
 
     public function __construct()

@@ -38,3 +38,6 @@ sql:
 
 dump:
 	$(DOCKER_DB) psql -U user characters -f /docker-entrypoint-initdb.d/dump.sql
+
+cache-clear:
+	$(DOCKER_PHP_FPM) $(PHP) bin/console cache:clear

@@ -13,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CharacterRepository::class)]
-class Character
+class Character implements EntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -35,11 +35,11 @@ class Character
     #[ORM\Column(length: 255)]
     private ?string $gender = null;
 
-    #[ORM\ManyToOne(cascade: ['remove'], inversedBy: 'charactersOrigin')]
+    #[ORM\ManyToOne(cascade: ['remove', 'persist'], inversedBy: 'charactersOrigin')]
     #[Groups(['serialization'])]
     private ?Location $origin = null;
 
-    #[ORM\ManyToOne(cascade: ['remove'], inversedBy: 'charactersLocation')]
+    #[ORM\ManyToOne(cascade: ['remove', 'persist'], inversedBy: 'charactersLocation')]
     #[Groups(['serialization'])]
     private ?Location $location = null;
 
@@ -192,6 +192,16 @@ class Character
     {
         if ($this->episodes->removeElement($episode)) {
             $episode->removeCharacter($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAllEpisodes(): static
+    {
+        $episodes = $this->getEpisodes();
+        foreach ($episodes as $episode) {
+            $this->removeEpisode($episode);
         }
 
         return $this;

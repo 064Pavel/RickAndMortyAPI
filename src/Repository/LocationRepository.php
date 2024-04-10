@@ -17,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Location[]    findAll()
  * @method Location[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class LocationRepository extends ServiceEntityRepository
+class LocationRepository extends ServiceEntityRepository implements EntityRepositoryInterface
 {
     private EntityManagerInterface $entityManager;
 
@@ -27,16 +27,13 @@ class LocationRepository extends ServiceEntityRepository
         parent::__construct($registry, Location::class);
     }
 
-    public function findPaginated(int $page, int $perPage, string $sort, array $ids): array
+    public function findByFilters(array $filters): array
     {
-        $qb = $this->createQueryBuilder('p')
-            ->setMaxResults($perPage)
-            ->setFirstResult(($page - 1) * $perPage)
-            ->orderBy('p.' . substr($sort, 1), ('-' === $sort[0]) ? 'ASC' : 'DESC');
+        $qb = $this->createQueryBuilder('l');
 
-        if (!empty($ids)) {
-            $qb->andWhere('p.id IN (:ids)')
-                ->setParameter('ids', $ids);
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("l.$field = :$field")
+                ->setParameter($field, $value);
         }
 
         return $qb->getQuery()->getResult();
@@ -50,40 +47,16 @@ class LocationRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    public function save(Location $location): void
+    public function getTotalEntityCountWithFilters(array $filters): int
     {
-        $this->entityManager->persist($location);
-        $this->entityManager->flush();
+        $qb = $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)');
+
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("l.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
-
-    public function remove(Location $location): void
-    {
-        $this->entityManager->remove($location);
-        $this->entityManager->flush();
-    }
-
-    //    /**
-    //     * @return LocationDto[] Returns an array of LocationDto objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('l.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?LocationDto
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
 }

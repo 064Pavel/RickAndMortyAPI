@@ -6,101 +6,136 @@ namespace App\Controller;
 
 use App\DTO\LocationDto;
 use App\Service\LocationService;
+use App\Service\PaginationService;
+use App\Tools\QueryFilterInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class LocationController extends AbstractController
 {
-    private LocationService $locationService;
-    private SerializerInterface $serializer;
-    private ValidatorInterface $validator;
-
-    public function __construct(LocationService $locationService,
-        SerializerInterface $serializer,
-        ValidatorInterface $validator)
+    public function __construct(private LocationService $locationService,
+        private QueryFilterInterface $queryFilter,
+        private PaginationService $paginationService, )
     {
-        $this->locationService = $locationService;
-        $this->serializer = $serializer;
-        $this->validator = $validator;
     }
 
     #[Route('/api/location', name: 'all.location', methods: 'GET')]
     public function getAllLocation(Request $request): JsonResponse
     {
-        $page = $request->query->getInt('page', 1);
-        $perPage = $request->query->getInt('perPage', 10);
-        $sort = $request->query->get('sort', '-id');
-        $ids = $request->query->get('ids') ?: [];
+        try {
+            [$page, $limit] = $this->paginationService->getPageAndLimit($request);
 
-        $data = $this->locationService->getLocations($page, $perPage, $sort, $ids);
+            $allowedFilters = ['name', 'type', 'dimension'];
 
-        if (!$data) {
-            return $this->json([]);
+            $queries = $this->queryFilter->filter($request, $allowedFilters);
+
+            $data = $this->locationService->getEntities($page, $limit, $queries);
+
+            if (empty($data)) {
+                return $this->json(['message' => 'no data available']);
+            }
+
+            return $this->json($data);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while fetching locations'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return $this->json($data, Response::HTTP_OK);
     }
 
-    #[Route('/api/location/{id}', name: 'get.location', methods: 'GET')]
+    #[Route('/api/locations/{ids}', name: 'location.by.ids', methods: 'GET')]
+    public function getAllLocationByIds(string $ids, Request $request): JsonResponse
+    {
+        try {
+            [$page, $limit] = $this->paginationService->getPageAndLimit($request);
+
+            $data = $this->locationService->getEntitiesByIds($page, $limit, $ids);
+
+            if (empty($data)) {
+                return $this->json(['message' => 'nothing could be found on the request']);
+            }
+
+            return $this->json($data);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while fetching locations by ids'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/location/{id}', name: 'get.location', requirements: ['id' => '\d+'], methods: 'GET')]
     public function getLocation(int $id): JsonResponse
     {
-        $data = $this->locationService->getLocation($id);
+        try {
+            $data = $this->locationService->getEntity($id);
 
-        if (!$data) {
-            return $this->json([]);
+            if (empty($data)) {
+                return $this->json(['message' => 'nothing could be found on the request']);
+            }
+
+            return $this->json(['result' => $data]);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while fetching location'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return $this->json(['result' => $data], Response::HTTP_OK);
     }
 
     #[Route('/api/location', name: 'create.location', methods: 'POST')]
-    public function createLocation(Request $request): JsonResponse
+    public function createLocation(LocationDto $locationDto): JsonResponse
     {
-        $locationDto = $this->serializer->deserialize($request->getContent(), LocationDto::class, 'json');
+        try {
+            $data = $this->locationService->createEntity($locationDto);
 
-        $errors = $this->validator->validate($locationDto);
-        if (count($errors) > 0) {
-            $errorsMessage = (string) $errors;
-
-            return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
+            return $this->json(['result' => $data], Response::HTTP_CREATED);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while creating the location'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = $this->locationService->createLocation($locationDto);
-
-        return $this->json(['result' => $data], Response::HTTP_CREATED);
     }
 
-    #[Route('/api/location/{id}', name: 'update.location', methods: ['PUT', 'PATCH'])]
-    public function updateLocation(int $id, Request $request): JsonResponse
+    #[Route('/api/location/{id}', name: 'put.update.location', requirements: ['id' => '\d+'], methods: ['PUT'])]
+    public function putUpdateLocation(int $id, LocationDto $locationDto): JsonResponse
     {
-        $locationDto = $this->serializer->deserialize($request->getContent(), LocationDto::class, 'json');
+        try {
+            $data = $this->locationService->putUpdateEntity($id, $locationDto);
 
-        $errors = $this->validator->validate($locationDto);
-        if (count($errors) > 0) {
-            $errorsMessage = (string) $errors;
+            if (empty($data)) {
+                return $this->json(['message' => 'there is no such entity']);
+            }
 
-            return $this->json(['errors' => $errorsMessage], Response::HTTP_BAD_REQUEST);
+            return $this->json(['result' => $data]);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while updating the location'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = $this->locationService->updateLocation($id, $locationDto);
-
-        return $this->json(['result' => $data], Response::HTTP_OK);
     }
 
-    #[Route('/api/location/{id}', name: 'delete.location', methods: 'DELETE')]
+    #[Route('/api/location/{id}', name: 'patch.update.location', requirements: ['id' => '\d+'], methods: ['PATCH'])]
+    public function patchUpdateLocation(int $id, LocationDto $locationDto): JsonResponse
+    {
+        try {
+            $data = $this->locationService->patchUpdateEntity($id, $locationDto);
+
+            if (empty($data)) {
+                return $this->json(['message' => 'there is no such entity']);
+            }
+
+            return $this->json(['result' => $data]);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while updating the location'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/location/{id}', name: 'delete.location', requirements: ['id' => '\d+'], methods: 'DELETE')]
     public function deleteLocation(int $id): JsonResponse
     {
-        $isDelete = $this->locationService->deleteLocation($id);
+        try {
+            $isDelete = $this->locationService->deleteEntity($id);
 
-        if (!$isDelete) {
-            return $this->json(['message' => 'failure', Response::HTTP_BAD_REQUEST]);
+            if (!$isDelete) {
+                return $this->json(['message' => 'Unable to delete location'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            return $this->json(['message' => 'Location successfully deleted'], Response::HTTP_NO_CONTENT);
+        } catch (Exception $e) {
+            return $this->json(['message' => 'An error occurred while deleting the location'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return $this->json(['message' => 'success']);
     }
 }

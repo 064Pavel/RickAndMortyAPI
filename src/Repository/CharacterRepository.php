@@ -17,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Character[]    findAll()
  * @method Character[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class CharacterRepository extends ServiceEntityRepository
+class CharacterRepository extends ServiceEntityRepository implements EntityRepositoryInterface
 {
     private EntityManagerInterface $entityManager;
 
@@ -27,40 +27,36 @@ class CharacterRepository extends ServiceEntityRepository
         parent::__construct($registry, Character::class);
     }
 
-    public function save(Character $character): void
+    public function findByFilters(array $filters): array
     {
-        $this->entityManager->persist($character);
-        $this->entityManager->flush();
+        $qb = $this->createQueryBuilder('c');
+
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("c.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
-    public function remove(Character $character): void
+    public function getTotalEntityCount(): int
     {
-        $this->entityManager->remove($character);
-        $this->entityManager->flush();
+        return $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
-    //    /**
-    //     * @return Character[] Returns an array of Character objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function getTotalEntityCountWithFilters(array $filters): int
+    {
+        $qb = $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)');
 
-    //    public function findOneBySomeField($value): ?Character
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("l.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
 }

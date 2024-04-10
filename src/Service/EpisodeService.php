@@ -4,39 +4,77 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\DTO\EpisodeDto;
+use App\DTO\DtoInterface;
 use App\Entity\Episode;
 use App\Repository\EpisodeRepository;
-use DateTime;
+use App\Service\Factory\EpisodeFactory;
+use App\Tools\PaginatorInterface;
+use App\Tools\UrlGeneratorInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
-class EpisodeService
+class EpisodeService implements ServiceInterface
 {
-    private EpisodeRepository $episodeRepository;
-    private UrlGeneratorInterface $urlGenerator;
-
-    public function __construct(EpisodeRepository $episodeRepository,
-        UrlGeneratorInterface $urlGenerator)
+    public function __construct(private EpisodeRepository $episodeRepository,
+        private EntityManagerInterface $entityManager,
+        private UrlGeneratorInterface $urlGenerator,
+        private PaginatorInterface $paginator,
+        private EpisodeFactory $episodeFactory, )
     {
-        $this->episodeRepository = $episodeRepository;
-        $this->urlGenerator = $urlGenerator;
     }
 
-    public function getEpisodes(): array
+    public function getEntities(int $page, int $limit, array $queries = []): array
     {
-        $episodes = $this->episodeRepository->findAll();
+        if (empty($queries)) {
+            $episodes = $this->episodeRepository->findAll();
+            $count = $this->episodeRepository->getTotalEntityCount();
+        } else {
+            $episodes = $this->episodeRepository->findByFilters($queries);
+            $count = $this->episodeRepository->getTotalEntityCountWithFilters($queries);
+        }
+
+        $data = [];
+        foreach ($episodes as $episode) {
+            $data[] = $this->formatEpisodeData($episode);
+        }
+
+        $options = [
+            'page' => $page,
+            'entityName' => 'episode',
+            'limit' => $limit,
+            'query' => $queries,
+        ];
+
+        $data = $this->paginator->paginate($data, $options);
+        $info = $this->paginator->formatInfo($data, $count, $options);
+
+        return [
+            'info' => $info,
+            'results' => $data,
+        ];
+    }
+
+    public function getEntitiesByIds(int $page, int $limit, string $ids): array
+    {
+        $episodesIds = explode(',', $ids);
 
         $data = [];
 
-        foreach ($episodes as $episode) {
-            $data[] = $this->formatEpisodeData($episode);
+        foreach ($episodesIds as $id) {
+            $character = $this->episodeRepository->find($id);
+
+            if (!$character) {
+                continue;
+            }
+
+            $data[] = $this->formatEpisodeData($character);
         }
 
         return $data;
     }
 
-    public function getEpisode(int $episodeId): ?array
+    public function getEntity(int $id): ?array
     {
-        $episode = $this->episodeRepository->find($episodeId);
+        $episode = $this->episodeRepository->find($id);
 
         if (!$episode) {
             return null;
@@ -45,54 +83,58 @@ class EpisodeService
         return $this->formatEpisodeData($episode);
     }
 
-    public function createEpisode(EpisodeDto $episodeDto): Episode
+    public function createEntity(DtoInterface $dto): array
     {
-        $episode = new Episode();
-        $episode->setName($episodeDto->getName());
-        $episode->setAirDate($episodeDto->getAirDate());
-        $episode->setEpisode($episodeDto->getEpisode());
-        $episode->setViews($episodeDto->getViews());
-        $episode->setCreated(new DateTime());
+        $episode = $this->episodeFactory->createEntityFromDto($dto);
 
-        $this->episodeRepository->save($episode);
+        $this->entityManager->persist($episode);
+        $this->entityManager->flush();
 
-        return $episode;
+        return $this->formatEpisodeData($episode);
     }
 
-    public function updateEpisode(int $episodeId, EpisodeDto $episodeDto): ?array
+    public function putUpdateEntity(int $id, DtoInterface $dto): ?array
     {
-        $episode = $this->episodeRepository->find($episodeId);
+        $episode = $this->episodeRepository->find($id);
 
         if (!$episode) {
-            return null;
+            return [];
         }
 
-        $episode->setName($episodeDto->getName());
-        $episode->setAirDate($episodeDto->getAirDate());
-        $episode->setEpisode($episodeDto->getEpisode());
-        $episode->setViews($episodeDto->getViews());
+        $episode = $this->episodeFactory->putUpdateEntityFromDto($episode, $dto);
 
-        $this->episodeRepository->save($episode);
+        $this->entityManager->persist($episode);
+        $this->entityManager->flush();
 
-        return [
-            'id' => $episode->getId(),
-            'name' => $episode->getName(),
-            'air_date' => $episode->getAirDate(),
-            'episode' => $episode->getEpisode(),
-            'views' => $episode->getViews(),
-            'created' => $episode->getCreated(),
-        ];
+        return $this->formatEpisodeData($episode);
     }
 
-    public function deleteEpisode(int $episodeId): bool
+    public function patchUpdateEntity(int $id, DtoInterface $dto): array
     {
-        $episode = $this->episodeRepository->find($episodeId);
+        $episode = $this->episodeRepository->find($id);
+
+        if (!$episode) {
+            return [];
+        }
+
+        $episode = $this->episodeFactory->patchUpdateEntityFromDto($episode, $dto);
+
+        $this->entityManager->persist($episode);
+        $this->entityManager->flush();
+
+        return $this->formatEpisodeData($episode);
+    }
+
+    public function deleteEntity(int $id): bool
+    {
+        $episode = $this->episodeRepository->find($id);
 
         if (!$episode) {
             return false;
         }
 
-        $this->episodeRepository->remove($episode);
+        $this->entityManager->remove($episode);
+        $this->entityManager->flush();
 
         return true;
     }

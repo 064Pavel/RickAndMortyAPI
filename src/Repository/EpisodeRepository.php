@@ -17,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Episode[]    findAll()
  * @method Episode[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class EpisodeRepository extends ServiceEntityRepository
+class EpisodeRepository extends ServiceEntityRepository implements EntityRepositoryInterface
 {
     private EntityManagerInterface $entityManager;
 
@@ -27,15 +27,36 @@ class EpisodeRepository extends ServiceEntityRepository
         parent::__construct($registry, Episode::class);
     }
 
-    public function save(Episode $episode): void
+    public function findByFilters(array $filters): array
     {
-        $this->entityManager->persist($episode);
-        $this->entityManager->flush();
+        $qb = $this->createQueryBuilder('e');
+
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("e.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
-    public function remove(Episode $episode): void
+    public function getTotalEntityCount(): int
     {
-        $this->entityManager->remove($episode);
-        $this->entityManager->flush();
+        return $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function getTotalEntityCountWithFilters(array $filters): int
+    {
+        $qb = $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)');
+
+        foreach ($filters as $field => $value) {
+            $qb->andWhere("l.$field = :$field")
+                ->setParameter($field, $value);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 }
